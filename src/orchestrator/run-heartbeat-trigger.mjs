@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { promisify } from "node:util";
 import { loadHeartbeatConfig } from "../heartbeat/load-heartbeat.mjs";
 import { listRegisteredRepos, readRepoMemory } from "../memory/memory.mjs";
+import { buildRotReport } from "../rot-report/aggregate.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -26,8 +27,23 @@ if (!trigger) {
   throw new Error(`Unknown heartbeat trigger: ${values.trigger}`);
 }
 
+if (trigger.skill === "rot-report") {
+  const report = await buildRotReport();
+  console.log(
+    JSON.stringify(
+      {
+        trigger,
+        report,
+      },
+      null,
+      2,
+    ),
+  );
+  process.exit(0);
+}
+
 if (trigger.skill !== "cve-sweep") {
-  throw new Error(`This runner currently supports cve-sweep dispatch only, received ${trigger.skill}`);
+  throw new Error(`This runner currently supports cve-sweep and rot-report dispatch, received ${trigger.skill}`);
 }
 
 const repos = await listRegisteredRepos();
