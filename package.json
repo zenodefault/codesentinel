@@ -18,7 +18,11 @@
     "heartbeat:run": "node ./src/orchestrator/run-heartbeat-trigger.mjs",
     "memory:check": "node ./src/memory/check-memory.mjs",
     "command:route": "node ./src/orchestrator/route-command.mjs",
-    "lint": "node ./scripts/lint-workspace.mjs"
+    "lint": "node ./scripts/lint-workspace.mjs",
+    "webhooks:start": "node ./src/server/webhooks.mjs",
+    "pr-premortem": "node ./src/pr-premortem/run-pr-premortem.mjs",
+    "auto-fix": "node ./src/auto-fix/run-auto-fix.mjs",
+    "auto-fix:e2e": "node ./src/auto-fix/e2e-autofix-test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
