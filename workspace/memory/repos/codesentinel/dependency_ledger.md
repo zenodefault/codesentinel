@@ -5,7 +5,7 @@ Tracked dependency risk data for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:14:44.717Z",
+  "updatedAt": "2026-05-02T18:16:11.482Z",
   "manifest": {
     "ecosystem": "npm",
     "path": "/home/zenodefault/code/codesentinel/package.json"
@@ -3713,7 +3713,21 @@ Tracked dependency risk data for codesentinel.
       "warnings": [
         "NVD query for @agentclientprotocol/sdk was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
-      ]
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-28T08:54:27.212Z",
+        "daysSinceMaintained": 4,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
     },
     {
       "name": "@anthropic-ai/sdk",
@@ -3723,7 +3737,21 @@ Tracked dependency risk data for codesentinel.
       "warnings": [
         "NVD query for @anthropic-ai/sdk was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
-      ]
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-30T19:42:47.218Z",
+        "daysSinceMaintained": 1,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
     },
     {
       "name": "@aws-crypto/crc32",
@@ -3731,9 +3759,23 @@ Tracked dependency risk data for codesentinel.
       "direct": false,
       "advisories": [],
       "warnings": [
-        "NVD query for @aws-crypto/crc32 was rate-limited or failed after retries: Request failed with status code 429",
+        "NVD query for @aws-crypto/crc32 was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
-      ]
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:13:30.673Z",
+        "daysSinceMaintained": 344,
+        "normalized": 0.9425,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
     },
     {
       "name": "@aws-crypto/sha256-browser",
@@ -3743,7 +3785,21 @@ Tracked dependency risk data for codesentinel.
       "warnings": [
         "NVD query for @aws-crypto/sha256-browser was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
-      ]
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:13:58.287Z",
+        "daysSinceMaintained": 344,
+        "normalized": 0.9425,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
     },
     {
       "name": "@aws-crypto/sha256-js",
@@ -3753,7 +3809,21 @@ Tracked dependency risk data for codesentinel.
       "warnings": [
         "NVD query for @aws-crypto/sha256-js was rate-limited or failed after retries: Request failed with status code 429",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
-      ]
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:13:43.380Z",
+        "daysSinceMaintained": 344,
+        "normalized": 0.9425,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
     }
   ]
 }
