@@ -13,6 +13,7 @@
     "openclaw:gateway:status": "openclaw gateway status",
     "openclaw:agent:ping": "openclaw agent --message \"Respond with a one-line status summary for the CodeSentinel workspace.\"",
     "cve-sweep": "node ./src/cve-sweep/run-cve-sweep.mjs",
+    "git-archaeologist": "node ./src/git-archaeologist/run-git-archaeologist.mjs",
     "heartbeat:validate": "node ./src/heartbeat/validate-heartbeat.mjs",
     "memory:check": "node ./src/memory/check-memory.mjs",
     "lint": "node ./scripts/lint-workspace.mjs"
