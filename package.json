@@ -12,6 +12,7 @@
     "openclaw:doctor": "openclaw doctor",
     "openclaw:gateway:status": "openclaw gateway status",
     "openclaw:agent:ping": "openclaw agent --message \"Respond with a one-line status summary for the CodeSentinel workspace.\"",
+    "heartbeat:validate": "node ./src/heartbeat/validate-heartbeat.mjs",
     "lint": "node ./scripts/lint-workspace.mjs"
   },
   "dependencies": {
