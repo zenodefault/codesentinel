@@ -3,6 +3,10 @@ node_modules/
 .openclaw-*/
 .env
 reports/
+!src/reports/
+!src/reports/**
+__pycache__/
+*.pyc
 dist/
 coverage/
 npm-debug.log*
