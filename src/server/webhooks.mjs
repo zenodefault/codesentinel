@@ -38,6 +38,8 @@ async function handlePullRequestEvent(payload) {
   const fullRepoName = payload.repository.full_name;
   const repoName = payload.repository.name;
   const pullNumber = payload.pull_request.number;
+  const baseBranch = payload.pull_request.base?.ref ?? "unknown";
+  const author = payload.pull_request.user?.login ?? "unknown";
   const { owner, repo } = parseRepoFullName(fullRepoName);
   const files = await listPullRequestFiles(owner, repo, pullNumber);
   const changedFiles = files.map((entry) => entry.filename);
@@ -59,6 +61,8 @@ async function handlePullRequestEvent(payload) {
     skipped: false,
     repo: fullRepoName,
     pullNumber,
+    baseBranch,
+    author,
     changedFiles,
     comment: posted,
   };

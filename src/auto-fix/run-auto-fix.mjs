@@ -7,7 +7,7 @@ import { patchNodeManifest, patchPythonManifest } from "./manifest.mjs";
 import { runBuildSimulation } from "./docker-sim.mjs";
 import { checkLicenseChange } from "./license-check.mjs";
 import { createPullRequest, createRef, getFile, getRef, parseRepoFullName, upsertFile } from "../integrations/github.mjs";
-import { sendCveAlertMessage } from "../integrations/slack-notify.mjs";
+import { sendAutoFixFailureMessage, sendCveAlertMessage } from "../integrations/slack-notify.mjs";
 import { sendWhatsAppApprovalRequest } from "../integrations/whatsapp-twilio.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -41,13 +41,13 @@ function encodeBase64(content) {
   return Buffer.from(content, "utf8").toString("base64");
 }
 
-async function createDraftFixPr({ fullRepoName, baseBranch, branchName, title, body, files }) {
+async function createDraftFixPr({ fullRepoName, baseBranch, branchName, title, body, files, repoRoot }) {
   const { owner, repo } = parseRepoFullName(fullRepoName);
   const baseRef = await getRef(owner, repo, baseBranch);
   await createRef(owner, repo, branchName, baseRef.object.sha);
 
   for (const filePath of files) {
-    const repoRelative = path.basename(filePath);
+    const repoRelative = path.relative(repoRoot, filePath).replaceAll(path.sep, "/");
     const content = await readFile(filePath, "utf8");
     const existing = await getFile(owner, repo, repoRelative, branchName);
     await upsertFile(
@@ -110,13 +110,11 @@ async function runCli() {
     const simulation = await runBuildSimulation({ ecosystem: patchResult.ecosystem, repoPath: tempRepo });
 
     if (!simulation.passed) {
-      await sendCveAlertMessage({
+      await sendAutoFixFailureMessage({
         repoName: values["repo-full-name"],
         dependency: values.dependency,
         cveId: values.cve,
-        actualRisk: Number(values.risk),
-        severity: values.severity,
-        prUrl: null,
+        stderr: simulation.stderr || simulation.stdout,
       });
 
       console.log(
@@ -161,6 +159,7 @@ async function runCli() {
       title: prTitle,
       body: prBody,
       files: patchResult.changedFiles,
+      repoRoot: tempRepo,
     });
 
     await sendCveAlertMessage({

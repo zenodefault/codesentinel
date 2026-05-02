@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+import Anthropic from "@anthropic-ai/sdk";
 import { readMemoryJson, getRepoMemoryPaths } from "../memory/memory.mjs";
 import {
   createIssueComment,
@@ -52,6 +53,38 @@ function cvesForFile(filePath, dependencyLedger) {
   return cves;
 }
 
+async function generateWhatCouldGoWrong({ repoName, pullNumber, files, ghostOwned, cves }) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    const risky = files.filter((entry) => entry.riskLevel === "CRITICAL" || entry.riskLevel === "HIGH");
+    if (risky.length === 0) {
+      return "Low immediate regression risk; focus on test coverage for changed modules and dependency checks.";
+    }
+    return `Potential failures cluster around ${risky.map((entry) => entry.file).join(", ")} due to high coupling, known CVEs, and ownership gaps.`;
+  }
+
+  const client = new Anthropic({ apiKey });
+  const prompt = [
+    `Repository: ${repoName}`,
+    `PR: #${pullNumber}`,
+    "Generate a concise, constructive pre-mortem section titled implicitly as what could go wrong.",
+    "Mention likely failure modes, user impact, and one mitigation theme.",
+    `Files: ${JSON.stringify(files)}`,
+    `Ghost-owned files: ${JSON.stringify(ghostOwned)}`,
+    `CVEs in scope: ${JSON.stringify(cves)}`,
+  ].join("\n");
+
+  const response = await client.messages.create({
+    model: process.env.CLAUDE_MODEL ?? "claude-sonnet-4-20250514",
+    max_tokens: 220,
+    temperature: 0.2,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const text = response.content.find((entry) => entry.type === "text")?.text?.trim();
+  return text || "Potential risk is concentrated in high blast-radius and vulnerable dependencies; reinforce tests and staged rollout.";
+}
+
 export async function generatePremortem({ repoName, fullRepoName, pullNumber, changedFiles }) {
   const repoPaths = getRepoMemoryPaths(repoName);
   const dependencyLedger = await readMemoryJson(repoPaths.dependencyLedger);
@@ -82,10 +115,7 @@ export async function generatePremortem({ repoName, fullRepoName, pullNumber, ch
   const summary =
     files.length === 0
       ? "No changed files were detected."
-      : `Highest-risk files: ${files
-          .filter((entry) => entry.riskLevel === "CRITICAL" || entry.riskLevel === "HIGH")
-          .map((entry) => entry.file)
-          .join(", ") || "none"}. Primary concerns are dependency vulnerabilities and concentrated ownership.`;
+      : await generateWhatCouldGoWrong({ repoName, pullNumber, files, ghostOwned, cves });
 
   const markdown = buildPremortemMarkdown({
     repo: fullRepoName,

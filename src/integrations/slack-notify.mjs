@@ -35,6 +35,36 @@ export async function sendCveAlertMessage({ repoName, dependency, cveId, actualR
   return sendSlackBlocks(blocks, `${severity} CVE alert for ${dependency}`);
 }
 
+export async function sendAutoFixFailureMessage({ repoName, dependency, cveId, stderr }) {
+  const trimmed = String(stderr ?? "").trim();
+  const excerpt = trimmed.length > 1400 ? `${trimmed.slice(0, 1400)}\n...` : trimmed;
+  const blocks = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Auto-fix Build Failed* for *${repoName}*`,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Dependency*\n${dependency}` },
+        { type: "mrkdwn", text: `*CVE*\n${cveId}` },
+      ],
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Error log excerpt*\n\`\`\`${excerpt || "No stderr captured."}\`\`\``,
+      },
+    },
+  ];
+
+  return sendSlackBlocks(blocks, `Auto-fix failed for ${dependency}`);
+}
+
 export async function sendBlastRadiusWarning({ repoName, filePath, impactedCount }) {
   const blocks = [
     {
