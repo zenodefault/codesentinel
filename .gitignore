@@ -1,0 +1,10 @@
+node_modules/
+.openclaw/
+.openclaw-*/
+.env
+reports/
+dist/
+coverage/
+npm-debug.log*
+workspace/.git/
+workspace/.openclaw/

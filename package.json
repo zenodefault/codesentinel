@@ -1,0 +1,29 @@
+{
+  "name": "codesentinel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenClaw-powered repository guardian for dependency risk, history reconstruction, and proactive alerts.",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "openclaw:setup": "openclaw setup --workspace ./workspace",
+    "openclaw:doctor": "openclaw doctor",
+    "openclaw:gateway:status": "openclaw gateway status",
+    "openclaw:agent:ping": "openclaw agent --message \"Respond with a one-line status summary for the CodeSentinel workspace.\"",
+    "lint": "node ./scripts/lint-workspace.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.54.0",
+    "@octokit/graphql": "^9.0.1",
+    "@slack/webhook": "^7.0.6",
+    "axios": "^1.9.0",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
+    "fast-glob": "^3.3.3",
+    "openclaw": "^2026.4.29",
+    "p-limit": "^7.1.1",
+    "yaml": "^2.8.0"
+  }
+}
