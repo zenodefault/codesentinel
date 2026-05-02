@@ -5,7 +5,7 @@ Git and ticket-derived decision context for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:19:37.017Z",
+  "updatedAt": "2026-05-02T18:20:38.769Z",
   "decisions": [
     {
       "filePath": "README.md",
@@ -30,6 +30,53 @@ Git and ticket-derived decision context for codesentinel.
           "commitCount": 1,
           "files": [
             "README.md"
+          ],
+          "matchingStrategy": "git-email-local-part-vs-github-login"
+        }
+      ],
+      "ghostOwnershipRisk": "HIGH",
+      "warnings": [
+        "Jira credentials are not configured; ticket enrichment was skipped.",
+        "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."
+      ]
+    },
+    {
+      "filePath": "src/git-archaeologist/run-git-archaeologist.mjs",
+      "commitCount": 3,
+      "commits": [
+        {
+          "commitHash": "7aaedf9e014bf08204f6e82224c3197bd9e382c6",
+          "subject": "Task 11: identify ghost authors",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:49:43+05:30",
+          "ticketIds": []
+        },
+        {
+          "commitHash": "0510eb2e3c9395a5f4f15a12feddcc695f408cee",
+          "subject": "Task 10: enrich archaeology with Jira context",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:48:43+05:30",
+          "ticketIds": []
+        },
+        {
+          "commitHash": "1bfd1da1b7182fe3dfcccd45ba8204dd7d8aa6b8",
+          "subject": "Task 9: parse git archaeology history",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:48:05+05:30",
+          "ticketIds": []
+        }
+      ],
+      "jiraIssues": [],
+      "ghostAuthors": [
+        {
+          "repo": "codesentinel",
+          "filePath": "src/git-archaeologist/run-git-archaeologist.mjs",
+          "email": "zenobot99@gmail.com",
+          "loginHint": "zenobot99",
+          "lastCommitDate": "2026-05-02T23:49:43+05:30",
+          "commitCount": 3,
+          "files": [
+            "src/git-archaeologist/run-git-archaeologist.mjs"
           ],
           "matchingStrategy": "git-email-local-part-vs-github-login"
         }

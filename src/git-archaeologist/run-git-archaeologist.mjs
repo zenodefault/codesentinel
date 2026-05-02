@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import path from "node:path";
+import { buildBlastRadiusMap } from "../analysis/file-blast-radius.mjs";
 import { parseGitHistory } from "./git-history.mjs";
 import { identifyGhostAuthors } from "./ghost-authors.mjs";
 import { fetchJiraIssues } from "./jira.mjs";
@@ -32,6 +33,7 @@ const ghostAnalysis = await identifyGhostAuthors({
   filePath: values.file,
   commits: history,
 });
+const blastRadiusMap = await buildBlastRadiusMap(repoPath);
 const currentMemory = await readRepoMemory(repoName);
 const updatedDecisionHistory = {
   ...currentMemory.decisionHistory,
@@ -49,6 +51,11 @@ const updatedDecisionHistory = {
     },
   ],
 };
+await writeRepoMemory(repoName, "blastRadiusMap", {
+  repo: repoName,
+  updatedAt: new Date().toISOString(),
+  files: blastRadiusMap,
+});
 
 await writeRepoMemory(repoName, "decisionHistory", updatedDecisionHistory);
 
@@ -63,6 +70,7 @@ console.log(
       jiraIssues: jira.issues,
       ghostAuthors: ghostAnalysis.ghostAuthors,
       ghostOwnershipRisk: ghostAnalysis.riskLevel,
+      blastRadius: blastRadiusMap[values.file] ?? { directDependents: [], impactedFiles: [], blastRadiusCount: 0 },
       warnings: [...jira.warnings, ...ghostAnalysis.warnings],
     },
     null,
