@@ -5,7 +5,7 @@ Git and ticket-derived decision context for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:20:38.769Z",
+  "updatedAt": "2026-05-02T18:21:41.471Z",
   "decisions": [
     {
       "filePath": "README.md",
@@ -77,6 +77,60 @@ Git and ticket-derived decision context for codesentinel.
           "commitCount": 3,
           "files": [
             "src/git-archaeologist/run-git-archaeologist.mjs"
+          ],
+          "matchingStrategy": "git-email-local-part-vs-github-login"
+        }
+      ],
+      "ghostOwnershipRisk": "HIGH",
+      "warnings": [
+        "Jira credentials are not configured; ticket enrichment was skipped.",
+        "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."
+      ]
+    },
+    {
+      "filePath": "src/cve-sweep/run-cve-sweep.mjs",
+      "commitCount": 4,
+      "commits": [
+        {
+          "commitHash": "d175967283f5c4387040a75379e99fb101242cf7",
+          "subject": "Task 8: send critical CVE alerts to Slack",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:47:17+05:30",
+          "ticketIds": []
+        },
+        {
+          "commitHash": "685b00c86cfc8ea9297e71f0cc5a1ead23ce637f",
+          "subject": "Task 7: score dependency actual risk",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:46:19+05:30",
+          "ticketIds": []
+        },
+        {
+          "commitHash": "86042a0af52b3dc89003388bb45a722f43bc0ee6",
+          "subject": "Task 6: add transitive dependency graph",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:44:53+05:30",
+          "ticketIds": []
+        },
+        {
+          "commitHash": "a6c3db84ece38c3ab22972131701b4c16ba3b0a7",
+          "subject": "Task 5: build direct cve-sweep skill",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:42:29+05:30",
+          "ticketIds": []
+        }
+      ],
+      "jiraIssues": [],
+      "ghostAuthors": [
+        {
+          "repo": "codesentinel",
+          "filePath": "src/cve-sweep/run-cve-sweep.mjs",
+          "email": "zenobot99@gmail.com",
+          "loginHint": "zenobot99",
+          "lastCommitDate": "2026-05-02T23:47:17+05:30",
+          "commitCount": 4,
+          "files": [
+            "src/cve-sweep/run-cve-sweep.mjs"
           ],
           "matchingStrategy": "git-email-local-part-vs-github-login"
         }

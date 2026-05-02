@@ -4,6 +4,7 @@ import { buildBlastRadiusMap } from "../analysis/file-blast-radius.mjs";
 import { parseGitHistory } from "./git-history.mjs";
 import { identifyGhostAuthors } from "./ghost-authors.mjs";
 import { fetchJiraIssues } from "./jira.mjs";
+import { buildModulePassport } from "./module-passport.mjs";
 import { readRepoMemory, writeRepoMemory } from "../memory/memory.mjs";
 
 const { values } = parseArgs({
@@ -58,6 +59,12 @@ await writeRepoMemory(repoName, "blastRadiusMap", {
 });
 
 await writeRepoMemory(repoName, "decisionHistory", updatedDecisionHistory);
+const archaeologyResult = {
+  jiraIssues: jira.issues,
+  ghostAuthors: ghostAnalysis.ghostAuthors,
+  warnings: [...jira.warnings, ...ghostAnalysis.warnings],
+};
+const modulePassport = await buildModulePassport(repoPath, repoName, values.file, archaeologyResult);
 
 console.log(
   JSON.stringify(
@@ -72,6 +79,7 @@ console.log(
       ghostOwnershipRisk: ghostAnalysis.riskLevel,
       blastRadius: blastRadiusMap[values.file] ?? { directDependents: [], impactedFiles: [], blastRadiusCount: 0 },
       warnings: [...jira.warnings, ...ghostAnalysis.warnings],
+      modulePassport,
     },
     null,
     2,
