@@ -5,7 +5,7 @@ Reverse dependency map for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:20:38.770Z",
+  "updatedAt": "2026-05-02T18:22:37.491Z",
   "files": {
     "scripts/lint-workspace.mjs": {
       "directDependents": [],
@@ -118,6 +118,15 @@ Reverse dependency map for codesentinel.
       ],
       "blastRadiusCount": 1
     },
+    "src/git-archaeologist/module-passport.mjs": {
+      "directDependents": [
+        "src/git-archaeologist/run-git-archaeologist.mjs"
+      ],
+      "impactedFiles": [
+        "src/git-archaeologist/run-git-archaeologist.mjs"
+      ],
+      "blastRadiusCount": 1
+    },
     "src/git-archaeologist/run-git-archaeologist.mjs": {
       "directDependents": [],
       "impactedFiles": [],
@@ -125,17 +134,28 @@ Reverse dependency map for codesentinel.
     },
     "src/heartbeat/load-heartbeat.mjs": {
       "directDependents": [
-        "src/heartbeat/validate-heartbeat.mjs"
+        "src/heartbeat/validate-heartbeat.mjs",
+        "src/orchestrator/run-heartbeat-trigger.mjs"
       ],
       "impactedFiles": [
-        "src/heartbeat/validate-heartbeat.mjs"
+        "src/heartbeat/validate-heartbeat.mjs",
+        "src/orchestrator/run-heartbeat-trigger.mjs"
       ],
-      "blastRadiusCount": 1
+      "blastRadiusCount": 2
     },
     "src/heartbeat/validate-heartbeat.mjs": {
       "directDependents": [],
       "impactedFiles": [],
       "blastRadiusCount": 0
+    },
+    "src/integrations/slack.mjs": {
+      "directDependents": [
+        "src/cve-sweep/run-cve-sweep.mjs"
+      ],
+      "impactedFiles": [
+        "src/cve-sweep/run-cve-sweep.mjs"
+      ],
+      "blastRadiusCount": 1
     },
     "src/memory/check-memory.mjs": {
       "directDependents": [],
@@ -146,25 +166,30 @@ Reverse dependency map for codesentinel.
       "directDependents": [
         "src/cve-sweep/run-cve-sweep.mjs",
         "src/git-archaeologist/ghost-authors.mjs",
+        "src/git-archaeologist/module-passport.mjs",
         "src/git-archaeologist/run-git-archaeologist.mjs",
-        "src/memory/check-memory.mjs"
+        "src/memory/check-memory.mjs",
+        "src/orchestrator/run-heartbeat-trigger.mjs"
       ],
       "impactedFiles": [
         "src/cve-sweep/run-cve-sweep.mjs",
         "src/git-archaeologist/ghost-authors.mjs",
+        "src/git-archaeologist/module-passport.mjs",
         "src/git-archaeologist/run-git-archaeologist.mjs",
-        "src/memory/check-memory.mjs"
+        "src/memory/check-memory.mjs",
+        "src/orchestrator/run-heartbeat-trigger.mjs"
       ],
-      "blastRadiusCount": 4
+      "blastRadiusCount": 6
     },
-    "src/integrations/slack.mjs": {
-      "directDependents": [
-        "src/cve-sweep/run-cve-sweep.mjs"
-      ],
-      "impactedFiles": [
-        "src/cve-sweep/run-cve-sweep.mjs"
-      ],
-      "blastRadiusCount": 1
+    "src/orchestrator/route-command.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
+    },
+    "src/orchestrator/run-heartbeat-trigger.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
     }
   }
 }

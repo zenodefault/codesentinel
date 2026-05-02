@@ -40,6 +40,18 @@ Former contributors who still own meaningful historical context.
         "src/cve-sweep/run-cve-sweep.mjs"
       ],
       "matchingStrategy": "git-email-local-part-vs-github-login"
+    },
+    {
+      "repo": "codesentinel",
+      "filePath": "src/cve-sweep/run-cve-sweep.mjs",
+      "email": "zenobot99@gmail.com",
+      "loginHint": "zenobot99",
+      "lastCommitDate": "2026-05-02T23:47:17+05:30",
+      "commitCount": 4,
+      "files": [
+        "src/cve-sweep/run-cve-sweep.mjs"
+      ],
+      "matchingStrategy": "git-email-local-part-vs-github-login"
     }
   ]
 }

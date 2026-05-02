@@ -15,7 +15,9 @@
     "cve-sweep": "node ./src/cve-sweep/run-cve-sweep.mjs",
     "git-archaeologist": "node ./src/git-archaeologist/run-git-archaeologist.mjs",
     "heartbeat:validate": "node ./src/heartbeat/validate-heartbeat.mjs",
+    "heartbeat:run": "node ./src/orchestrator/run-heartbeat-trigger.mjs",
     "memory:check": "node ./src/memory/check-memory.mjs",
+    "command:route": "node ./src/orchestrator/route-command.mjs",
     "lint": "node ./scripts/lint-workspace.mjs"
   },
   "dependencies": {

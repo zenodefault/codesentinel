@@ -5,13 +5,13 @@ Tracked dependency risk data for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:17:08.533Z",
+  "updatedAt": "2026-05-02T18:22:56.181Z",
   "manifest": {
     "ecosystem": "npm",
     "path": "/home/zenodefault/code/codesentinel/package.json"
   },
   "scanScope": "all",
-  "maxDependencies": 3,
+  "maxDependencies": 5,
   "directDependencyCount": 11,
   "graph": {
     "nodes": [
@@ -3711,7 +3711,7 @@ Tracked dependency risk data for codesentinel.
       "direct": false,
       "advisories": [],
       "warnings": [
-        "NVD query for @agentclientprotocol/sdk was rate-limited or failed after retries: Request failed with status code 429",
+        "NVD query for @agentclientprotocol/sdk was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
       ],
       "cvssBaseScore": 0,
@@ -3735,14 +3735,16 @@ Tracked dependency risk data for codesentinel.
       "direct": true,
       "advisories": [],
       "warnings": [
-        "NVD query for @anthropic-ai/sdk was rate-limited or failed after retries: Request failed with status code 429",
+        "NVD query for @anthropic-ai/sdk was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
       ],
       "cvssBaseScore": 0,
       "blastRadius": {
-        "importCount": 0,
-        "files": [],
-        "normalized": 0.1
+        "importCount": 1,
+        "files": [
+          "src/git-archaeologist/module-passport.mjs"
+        ],
+        "normalized": 1
       },
       "maintenance": {
         "lastMaintainedAt": "2026-04-30T19:42:47.218Z",
@@ -3759,7 +3761,7 @@ Tracked dependency risk data for codesentinel.
       "direct": false,
       "advisories": [],
       "warnings": [
-        "NVD query for @aws-crypto/crc32 was rate-limited or failed after retries: Request failed with status code 429",
+        "NVD query for @aws-crypto/crc32 was rate-limited or failed after retries: Request failed with status code 404",
         "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
       ],
       "cvssBaseScore": 0,
@@ -3776,35 +3778,60 @@ Tracked dependency risk data for codesentinel.
       },
       "actualRisk": 0,
       "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-crypto/sha256-browser",
+      "versionRange": "5.2.0",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-crypto/sha256-browser was rate-limited or failed after retries: Request failed with status code 404",
+        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:13:58.287Z",
+        "daysSinceMaintained": 344,
+        "normalized": 0.9425,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-crypto/sha256-js",
+      "versionRange": "5.2.0",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-crypto/sha256-js was rate-limited or failed after retries: Request failed with status code 404",
+        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:13:43.380Z",
+        "daysSinceMaintained": 344,
+        "normalized": 0.9425,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
     }
   ],
   "alerts": {
-    "criticalThreshold": 0,
-    "criticalDependencies": [
-      "@agentclientprotocol/sdk",
-      "@anthropic-ai/sdk",
-      "@aws-crypto/crc32"
-    ],
-    "deliveries": [
-      {
-        "dependency": "@agentclientprotocol/sdk",
-        "threshold": 0,
-        "sent": false,
-        "warning": "SLACK_WEBHOOK_URL is not configured; Slack alert was skipped."
-      },
-      {
-        "dependency": "@anthropic-ai/sdk",
-        "threshold": 0,
-        "sent": false,
-        "warning": "SLACK_WEBHOOK_URL is not configured; Slack alert was skipped."
-      },
-      {
-        "dependency": "@aws-crypto/crc32",
-        "threshold": 0,
-        "sent": false,
-        "warning": "SLACK_WEBHOOK_URL is not configured; Slack alert was skipped."
-      }
-    ]
+    "criticalThreshold": 7,
+    "criticalDependencies": [],
+    "deliveries": []
   }
 }
 ```

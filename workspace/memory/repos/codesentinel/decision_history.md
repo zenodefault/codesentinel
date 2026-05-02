@@ -5,7 +5,7 @@ Git and ticket-derived decision context for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:21:41.471Z",
+  "updatedAt": "2026-05-02T18:22:37.491Z",
   "decisions": [
     {
       "filePath": "README.md",
