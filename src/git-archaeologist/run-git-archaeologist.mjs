@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import path from "node:path";
 import { parseGitHistory } from "./git-history.mjs";
+import { identifyGhostAuthors } from "./ghost-authors.mjs";
 import { fetchJiraIssues } from "./jira.mjs";
 import { readRepoMemory, writeRepoMemory } from "../memory/memory.mjs";
 
@@ -26,6 +27,11 @@ const history = await parseGitHistory(repoPath, values.file);
 const ticketIds = [...new Set(history.flatMap((commit) => commit.ticketIds))];
 const jira = await fetchJiraIssues(ticketIds);
 const repoName = path.basename(repoPath);
+const ghostAnalysis = await identifyGhostAuthors({
+  repoName,
+  filePath: values.file,
+  commits: history,
+});
 const currentMemory = await readRepoMemory(repoName);
 const updatedDecisionHistory = {
   ...currentMemory.decisionHistory,
@@ -37,7 +43,9 @@ const updatedDecisionHistory = {
       commitCount: history.length,
       commits: history,
       jiraIssues: jira.issues,
-      warnings: jira.warnings,
+      ghostAuthors: ghostAnalysis.ghostAuthors,
+      ghostOwnershipRisk: ghostAnalysis.riskLevel,
+      warnings: [...jira.warnings, ...ghostAnalysis.warnings],
     },
   ],
 };
@@ -53,7 +61,9 @@ console.log(
       commitCount: history.length,
       commits: history,
       jiraIssues: jira.issues,
-      warnings: jira.warnings,
+      ghostAuthors: ghostAnalysis.ghostAuthors,
+      ghostOwnershipRisk: ghostAnalysis.riskLevel,
+      warnings: [...jira.warnings, ...ghostAnalysis.warnings],
     },
     null,
     2,
