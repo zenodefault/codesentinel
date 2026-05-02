@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "codesentinel": "./src/cli/codesentinel.mjs"
+  },
   "description": "OpenClaw-powered repository guardian for dependency risk, history reconstruction, and proactive alerts.",
   "engines": {
     "node": ">=22.14.0"
@@ -19,6 +22,7 @@
     "rot-report": "node ./src/rot-report/run-rot-report.mjs",
     "report:weekly": "node ./src/reports/run-weekly-report.mjs",
     "server:start": "node ./src/server/run-server.mjs",
+    "cli": "node ./src/cli/codesentinel.mjs",
     "memory:check": "node ./src/memory/check-memory.mjs",
     "command:route": "node ./src/orchestrator/route-command.mjs",
     "lint": "node ./scripts/lint-workspace.mjs",

@@ -1,0 +1,517 @@
+#!/usr/bin/env node
+import { execFile } from "node:child_process";
+import { access, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import readline from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
+import { promisify } from "node:util";
+import { parseArgs } from "node:util";
+import dotenv from "dotenv";
+import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson } from "../memory/memory.mjs";
+
+const execFileAsync = promisify(execFile);
+dotenv.config();
+
+function printUsage() {
+  console.log(`CodeSentinel CLI
+
+Usage:
+  codesentinel register <repo_url_or_path> [--max-dependencies 25]
+  codesentinel scan <repo_name> [--max-dependencies 25]
+  codesentinel why <file_path> [--repo /path/to/repo]
+  codesentinel report [--notify] [--output ./reports]
+  codesentinel onboard [--non-interactive]
+  codesentinel repos
+`);
+}
+
+function parseRepoName(repoInput) {
+  const trimmed = repoInput.trim().replace(/\/+$/, "");
+  const last = trimmed.split("/").pop() ?? trimmed;
+  return last.endsWith(".git") ? last.slice(0, -4) : last;
+}
+
+function isLocalPath(repoInput) {
+  return !/^(https?:\/\/|git@|ssh:\/\/)/.test(repoInput);
+}
+
+async function runJsonCommand(args) {
+  const { stdout } = await execFileAsync("node", args, { cwd: process.cwd() });
+  const jsonStart = stdout.indexOf("{");
+  if (jsonStart < 0) {
+    throw new Error(`No JSON output from command: node ${args.join(" ")}`);
+  }
+  return JSON.parse(stdout.slice(jsonStart));
+}
+
+async function findFirstTrackedFile(repoName) {
+  const blastPath = getRepoMemoryPaths(repoName).blastRadiusMap;
+  const blast = await readMemoryJson(blastPath);
+  return Object.keys(blast.files ?? {}).sort()[0] ?? null;
+}
+
+async function cmdRegister(positionals, values) {
+  const repoInput = positionals[0];
+  if (!repoInput) {
+    throw new Error("register requires <repo_url_or_path>");
+  }
+
+  const repoName = parseRepoName(repoInput);
+  await ensureMemoryStructure(repoName);
+
+  const cveResult = await runJsonCommand([
+    "./src/cve-sweep/run-cve-sweep.mjs",
+    "--repo",
+    repoInput,
+    "--repo-name",
+    repoName,
+    "--max-dependencies",
+    String(values["max-dependencies"] ?? 25),
+  ]);
+
+  let archaeology = null;
+  if (isLocalPath(repoInput)) {
+    const firstFile = await findFirstTrackedFile(repoName);
+    if (firstFile) {
+      archaeology = await runJsonCommand([
+        "./src/git-archaeologist/run-git-archaeologist.mjs",
+        "--repo",
+        repoInput,
+        "--file",
+        firstFile,
+      ]);
+    }
+  }
+
+  const ledger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
+  console.log(
+    JSON.stringify(
+      {
+        command: "register",
+        repoName,
+        source: repoInput,
+        dependencies: ledger.dependencies?.length ?? cveResult.dependencyCount,
+        critical: ledger.alerts?.criticalDependencies?.length ?? 0,
+        archaeologyBootstrapped: Boolean(archaeology),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function cmdScan(positionals, values) {
+  const repoName = positionals[0];
+  if (!repoName) {
+    throw new Error("scan requires <repo_name>");
+  }
+
+  const repos = await listRegisteredRepos();
+  if (!repos.includes(repoName)) {
+    throw new Error(`Repo ${repoName} is not registered in Durable Memory.`);
+  }
+
+  const ledger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
+  const sourceInput = ledger.source?.input ?? path.dirname(ledger.manifest?.path ?? "");
+  if (!sourceInput) {
+    throw new Error(`Repo ${repoName} has no source input in memory.`);
+  }
+
+  const scan = await runJsonCommand([
+    "./src/cve-sweep/run-cve-sweep.mjs",
+    "--repo",
+    sourceInput,
+    "--repo-name",
+    repoName,
+    "--max-dependencies",
+    String(values["max-dependencies"] ?? 25),
+  ]);
+
+  console.log(
+    JSON.stringify(
+      {
+        command: "scan",
+        repoName,
+        dependencyCount: scan.dependencyCount,
+        directDependencyCount: scan.directDependencyCount,
+        criticalAlerts: scan.alerts?.length ?? 0,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function cmdWhy(positionals, values) {
+  const filePath = positionals[0];
+  if (!filePath) {
+    throw new Error("why requires <file_path>");
+  }
+
+  const repoRoot = path.resolve(values.repo ?? process.cwd());
+  const result = await runJsonCommand([
+    "./src/git-archaeologist/run-git-archaeologist.mjs",
+    "--repo",
+    repoRoot,
+    "--file",
+    filePath,
+  ]);
+
+  console.log(
+    JSON.stringify(
+      {
+        command: "why",
+        repoName: result.repoName,
+        filePath: result.filePath,
+        commitCount: result.commitCount,
+        ghostOwnershipRisk: result.ghostOwnershipRisk,
+        passportPath: result.modulePassport?.path ?? null,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function cmdReport(values) {
+  const args = ["./src/reports/run-weekly-report.mjs", "--output", values.output ?? "reports"];
+  if (values.notify) {
+    args.push("--notify");
+  }
+
+  const report = await runJsonCommand(args);
+  console.log(
+    JSON.stringify(
+      {
+        command: "report",
+        outputPath: report.outputPath,
+        repoCount: report.report?.repoCount,
+        criticalCount: report.report?.counts?.CRITICAL,
+        slackSent: report.slack?.sent,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function cmdRepos() {
+  const repos = await listRegisteredRepos();
+  console.log(JSON.stringify({ command: "repos", repos }, null, 2));
+}
+
+async function pathExists(filePath) {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function checkCommand(command, args = ["--version"]) {
+  try {
+    const { stdout, stderr } = await execFileAsync(command, args, { cwd: process.cwd() });
+    return { ok: true, output: (stdout || stderr || "").trim() };
+  } catch (error) {
+    return { ok: false, output: error.message };
+  }
+}
+
+function requiredEnvStatus(names) {
+  return names.map((name) => ({ name, present: Boolean(process.env[name]) }));
+}
+
+function parseEnvFile(raw) {
+  const map = new Map();
+  const lines = raw.split(/\r?\n/);
+  for (const line of lines) {
+    if (!line || line.trim().startsWith("#")) {
+      continue;
+    }
+    const eq = line.indexOf("=");
+    if (eq <= 0) {
+      continue;
+    }
+    const key = line.slice(0, eq).trim();
+    const value = line.slice(eq + 1).trim();
+    map.set(key, value);
+  }
+  return map;
+}
+
+function quoteEnvValue(value) {
+  if (/^[A-Za-z0-9_./:-]+$/.test(value)) {
+    return value;
+  }
+  return `"${String(value).replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")}"`;
+}
+
+async function upsertEnvValues(filePath, entries) {
+  let raw = "";
+  try {
+    raw = await readFile(filePath, "utf8");
+  } catch {
+    raw = "";
+  }
+
+  const lines = raw ? raw.split(/\r?\n/) : [];
+  const byKey = new Map(entries.map((entry) => [entry.key, entry.value]));
+  const seen = new Set();
+  const out = [];
+
+  for (const line of lines) {
+    const eq = line.indexOf("=");
+    if (eq > 0) {
+      const key = line.slice(0, eq).trim();
+      if (byKey.has(key)) {
+        out.push(`${key}=${quoteEnvValue(byKey.get(key))}`);
+        seen.add(key);
+        continue;
+      }
+    }
+    out.push(line);
+  }
+
+  for (const [key, value] of byKey.entries()) {
+    if (!seen.has(key)) {
+      out.push(`${key}=${quoteEnvValue(value)}`);
+    }
+  }
+
+  const normalized = out.join("\n").replace(/\n*$/, "\n");
+  await writeFile(filePath, normalized, "utf8");
+}
+
+async function promptForEnv(missingEnv) {
+  if (!process.stdin.isTTY) {
+    return { collected: [], skipped: missingEnv };
+  }
+
+  const labels = {
+    SLACK_SIGNING_SECRET: "Slack Signing Secret",
+    SLACK_BOT_TOKEN: "Slack Bot Token",
+    SLACK_WEBHOOK_URL: "Slack Incoming Webhook URL",
+    SLACK_CHANNEL_ID: "Slack Channel ID",
+    GITHUB_TOKEN: "GitHub Token",
+    GITHUB_WEBHOOK_SECRET: "GitHub Webhook Secret",
+    TWILIO_ACCOUNT_SID: "Twilio Account SID",
+    TWILIO_AUTH_TOKEN: "Twilio Auth Token",
+    TWILIO_WHATSAPP_FROM: "Twilio WhatsApp From (e.g. whatsapp:+14155238886)",
+  };
+
+  const rl = readline.createInterface({ input, output });
+  const collected = [];
+  const skipped = [];
+
+  try {
+    console.log("CodeSentinel onboarding: enter missing values (type 'skip' to skip a field).");
+    for (const key of missingEnv) {
+      const label = labels[key] ?? key;
+      const answer = (await rl.question(`${label}: `)).trim();
+      if (!answer || answer.toLowerCase() === "skip") {
+        skipped.push(key);
+        continue;
+      }
+      collected.push({ key, value: answer });
+      process.env[key] = answer;
+    }
+  } finally {
+    rl.close();
+  }
+
+  return { collected, skipped };
+}
+
+async function cmdOnboard(values) {
+  const cwd = process.cwd();
+  const envFile = path.join(cwd, ".env");
+  const existingEnv = parseEnvFile(
+    await readFile(envFile, "utf8").catch(() => ""),
+  );
+  for (const [key, value] of existingEnv.entries()) {
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+
+  const files = {
+    soul: path.join(cwd, "workspace", "SOUL.md"),
+    heartbeat: path.join(cwd, "workspace", "HEARTBEAT.md"),
+    memorySchema: path.join(cwd, "workspace", "memory", "SCHEMA.md"),
+    cveSkill: path.join(cwd, "skills", "cve-sweep", "SKILL.md"),
+    archaeologySkill: path.join(cwd, "skills", "git-archaeologist", "SKILL.md"),
+    premortemSkill: path.join(cwd, "skills", "pr-premortem", "SKILL.md"),
+    autofixSkill: path.join(cwd, "skills", "auto-fix", "SKILL.md"),
+    rotReportSkill: path.join(cwd, "skills", "rot-report", "SKILL.md"),
+  };
+
+  const fileChecks = await Promise.all(
+    Object.entries(files).map(async ([key, filePath]) => ({
+      key,
+      path: filePath,
+      ok: await pathExists(filePath),
+    })),
+  );
+
+  const toolChecks = {
+    node: {
+      ok: Number(process.versions.node.split(".")[0]) >= 22,
+      output: process.versions.node,
+    },
+    docker: await checkCommand("docker", ["--version"]),
+    python3: await checkCommand("python3", ["--version"]),
+    openclaw: await checkCommand("openclaw", ["--version"]),
+  };
+
+  const envChecks = {
+    slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
+    github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
+    twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+  };
+
+  const missingEnv = Object.values(envChecks)
+    .flat()
+    .filter((entry) => !entry.present)
+    .map((entry) => entry.name);
+
+  let onboardingCapture = {
+    prompted: false,
+    wroteEnvFile: false,
+    collected: [],
+    skipped: [],
+  };
+
+  if (missingEnv.length > 0 && !values["non-interactive"]) {
+    onboardingCapture.prompted = true;
+    const prompted = await promptForEnv(missingEnv);
+    onboardingCapture.collected = prompted.collected.map((entry) => entry.key);
+    onboardingCapture.skipped = prompted.skipped;
+    if (prompted.collected.length > 0) {
+      await upsertEnvValues(envFile, prompted.collected);
+      onboardingCapture.wroteEnvFile = true;
+    }
+  }
+
+  const refreshedEnvChecks = {
+    slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
+    github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
+    twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+  };
+
+  const remainingMissingEnv = Object.values(refreshedEnvChecks)
+    .flat()
+    .filter((entry) => !entry.present)
+    .map((entry) => entry.name);
+
+  const failedFiles = fileChecks.filter((entry) => !entry.ok).map((entry) => entry.path);
+  const failedTools = Object.entries(toolChecks)
+    .filter(([, value]) => !value.ok)
+    .map(([key]) => key);
+
+  const ok = remainingMissingEnv.length === 0 && failedFiles.length === 0 && failedTools.length === 0;
+
+  const nextSteps = [];
+  if (failedTools.includes("node")) {
+    nextSteps.push("Install Node.js >= 22.");
+  }
+  if (failedTools.includes("docker")) {
+    nextSteps.push("Install Docker and ensure `docker --version` works.");
+  }
+  if (failedTools.includes("openclaw")) {
+    nextSteps.push("Install OpenClaw CLI and run `npm run openclaw:doctor`.");
+  }
+  if (failedFiles.length > 0) {
+    nextSteps.push("Restore missing OpenClaw project files listed in `missingFiles`.");
+  }
+  if (remainingMissingEnv.length > 0) {
+    if (values["non-interactive"]) {
+      nextSteps.push("Set missing environment variables manually or rerun `codesentinel onboard` without --non-interactive.");
+    } else {
+      nextSteps.push("Fill remaining skipped/missing environment variables by rerunning `codesentinel onboard`.");
+    }
+  }
+  if (ok) {
+    nextSteps.push("Run `npm run server:start` and `npm run webhooks:start` in separate terminals.");
+    nextSteps.push("Register a repo via `npm run cli -- register <repo_path_or_url>`.");
+  }
+
+  console.log(
+    JSON.stringify(
+      {
+        command: "onboard",
+        ok,
+        checks: {
+          files: fileChecks,
+          tools: toolChecks,
+          env: refreshedEnvChecks,
+        },
+        onboardingCapture,
+        missingFiles: failedFiles,
+        missingEnv: remainingMissingEnv,
+        failedTools,
+        nextSteps,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function main() {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    options: {
+      repo: { type: "string" },
+      output: { type: "string", default: "reports" },
+      notify: { type: "boolean", default: false },
+      "max-dependencies": { type: "string", default: "25" },
+      "non-interactive": { type: "boolean", default: false },
+      help: { type: "boolean", short: "h", default: false },
+    },
+  });
+
+  if (values.help || positionals.length === 0) {
+    printUsage();
+    return;
+  }
+
+  const [command, ...rest] = positionals;
+
+  if (command === "register") {
+    await cmdRegister(rest, values);
+    return;
+  }
+
+  if (command === "scan") {
+    await cmdScan(rest, values);
+    return;
+  }
+
+  if (command === "why") {
+    await cmdWhy(rest, values);
+    return;
+  }
+
+  if (command === "report") {
+    await cmdReport(values);
+    return;
+  }
+
+  if (command === "repos") {
+    await cmdRepos();
+    return;
+  }
+
+  if (command === "onboard") {
+    await cmdOnboard(values);
+    return;
+  }
+
+  throw new Error(`Unknown command: ${command}`);
+}
+
+main().catch((error) => {
+  console.error(JSON.stringify({ ok: false, error: error.message }, null, 2));
+  process.exitCode = 1;
+});
