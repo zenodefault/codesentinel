@@ -1,10 +1,9 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { parseJsonBlock } from "./json-block.mjs";
 
 export const MEMORY_ROOT = new URL("../../workspace/memory/", import.meta.url);
 export const REPOS_ROOT = new URL("./repos/", MEMORY_ROOT);
-
-const JSON_BLOCK_PATTERN = /```json\n([\s\S]*?)\n```/;
 
 function repoSlug(repoName) {
   return repoName
@@ -32,16 +31,6 @@ async function ensureFile(url, contents) {
   } catch {
     await writeFile(url, contents, "utf8");
   }
-}
-
-function parseJsonBlock(raw, filePath) {
-  const match = raw.match(JSON_BLOCK_PATTERN);
-
-  if (!match) {
-    throw new Error(`Expected a fenced JSON block in ${filePath}`);
-  }
-
-  return JSON.parse(match[1]);
 }
 
 export function getRepoMemoryPaths(repoName) {
@@ -143,6 +132,24 @@ export async function readMemoryJson(fileUrl) {
 
 export async function writeMemoryJson(fileUrl, title, description, data) {
   await writeFile(fileUrl, buildMarkdown(title, description, data), "utf8");
+}
+
+export async function readSharedMemory(kind) {
+  await ensureMemoryStructure();
+  const shared = getSharedMemoryPaths();
+
+  const fileMap = {
+    upgradeDecisions: shared.upgradeDecisions,
+    ghostAuthors: shared.ghostAuthors,
+  };
+
+  const target = fileMap[kind];
+
+  if (!target) {
+    throw new Error(`Unsupported shared memory kind: ${kind}`);
+  }
+
+  return readMemoryJson(target);
 }
 
 export async function readRepoMemory(repoName) {

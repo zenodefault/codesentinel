@@ -16,6 +16,9 @@
     "git-archaeologist": "node ./src/git-archaeologist/run-git-archaeologist.mjs",
     "heartbeat:validate": "node ./src/heartbeat/validate-heartbeat.mjs",
     "heartbeat:run": "node ./src/orchestrator/run-heartbeat-trigger.mjs",
+    "rot-report": "node ./src/rot-report/run-rot-report.mjs",
+    "report:weekly": "node ./src/reports/run-weekly-report.mjs",
+    "server:start": "node ./src/server/run-server.mjs",
     "memory:check": "node ./src/memory/check-memory.mjs",
     "command:route": "node ./src/orchestrator/route-command.mjs",
     "lint": "node ./scripts/lint-workspace.mjs"

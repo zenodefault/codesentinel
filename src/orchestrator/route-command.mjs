@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { promisify } from "node:util";
+import { routeSlackCommand } from "../server/command-handlers.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -38,6 +39,9 @@ if (values.command === "/why") {
 
   const jsonStart = stdout.indexOf("{");
   console.log(stdout.slice(jsonStart));
+} else if (values.command === "/scan" || values.command === "/sentinel") {
+  const response = await routeSlackCommand(values.command, values.text ?? "");
+  console.log(JSON.stringify(response.body, null, 2));
 } else {
   throw new Error(`Unsupported command: ${values.command}`);
 }
