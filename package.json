@@ -12,6 +12,7 @@
     "openclaw:doctor": "openclaw doctor",
     "openclaw:gateway:status": "openclaw gateway status",
     "openclaw:agent:ping": "openclaw agent --message \"Respond with a one-line status summary for the CodeSentinel workspace.\"",
+    "cve-sweep": "node ./src/cve-sweep/run-cve-sweep.mjs",
     "heartbeat:validate": "node ./src/heartbeat/validate-heartbeat.mjs",
     "memory:check": "node ./src/memory/check-memory.mjs",
     "lint": "node ./scripts/lint-workspace.mjs"
@@ -26,6 +27,7 @@
     "fast-glob": "^3.3.3",
     "openclaw": "^2026.4.29",
     "p-limit": "^7.1.1",
+    "toml": "^3.0.0",
     "yaml": "^2.8.0"
   }
 }
