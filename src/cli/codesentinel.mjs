@@ -2,10 +2,9 @@
 import { execFile } from "node:child_process";
 import { access, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import readline from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
 import { promisify } from "node:util";
 import { parseArgs } from "node:util";
+import { intro, outro, select, text, spinner, isCancel, cancel, note } from "@clack/prompts";
 import dotenv from "dotenv";
 import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson } from "../memory/memory.mjs";
 
@@ -231,6 +230,22 @@ function getLlmEnvChecks(provider) {
     return requiredEnvStatus(["ANTHROPIC_API_KEY"]);
   }
 
+  if (provider === "openai") {
+    return requiredEnvStatus(["OPENAI_API_KEY"]);
+  }
+
+  if (provider === "google") {
+    return requiredEnvStatus(["GOOGLE_API_KEY"]);
+  }
+
+  if (provider === "qwen") {
+    return requiredEnvStatus(["QWEN_API_KEY"]);
+  }
+
+  if (provider === "openrouter") {
+    return requiredEnvStatus(["OPENROUTER_API_KEY"]);
+  }
+
   if (provider === "openclaw-cli") {
     const selectorKeys = ["OPENCLAW_AGENT_ID", "OPENCLAW_SESSION_ID", "OPENCLAW_TO"];
     return [
@@ -312,6 +327,15 @@ async function promptForEnv(missingEnv) {
 
   const labels = {
     ANTHROPIC_API_KEY: "Anthropic API Key",
+    ANTHROPIC_MODEL: "Anthropic model override (optional)",
+    GOOGLE_API_KEY: "Google AI API Key",
+    GOOGLE_MODEL: "Google model override (optional)",
+    OPENAI_API_KEY: "OpenAI API Key",
+    OPENAI_MODEL: "OpenAI model override (optional)",
+    OPENROUTER_API_KEY: "OpenRouter API Key",
+    OPENROUTER_MODEL: "OpenRouter model override (optional)",
+    QWEN_API_KEY: "Qwen API Key",
+    QWEN_MODEL: "Qwen model override (optional)",
     SLACK_SIGNING_SECRET: "Slack Signing Secret",
     SLACK_BOT_TOKEN: "Slack Bot Token",
     SLACK_WEBHOOK_URL: "Slack Incoming Webhook URL",
@@ -327,25 +351,30 @@ async function promptForEnv(missingEnv) {
     TWILIO_WHATSAPP_FROM: "Twilio WhatsApp From (e.g. whatsapp:+14155238886)",
   };
 
-  const rl = readline.createInterface({ input, output });
   const collected = [];
   const skipped = [];
 
-  try {
-    console.log("CodeSentinel onboarding: enter missing values (type 'skip' to skip a field).");
-    for (const key of missingEnv) {
-      const label = labels[key] ?? key;
-      const answer = (await rl.question(`${label}: `)).trim();
-      if (!answer || answer.toLowerCase() === "skip") {
-        skipped.push(key);
-        continue;
-      }
-      const targetKey = key === "OPENCLAW_AGENT_ID|OPENCLAW_SESSION_ID|OPENCLAW_TO" ? "OPENCLAW_AGENT_ID" : key;
-      collected.push({ key: targetKey, value: answer });
-      process.env[targetKey] = answer;
+  for (const key of missingEnv) {
+    const label = labels[key] ?? key;
+    const answer = await text({
+      message: `${label}:`,
+      placeholder: "leave empty to skip",
+    });
+
+    if (isCancel(answer)) {
+      cancel("Onboarding cancelled.");
+      process.exit(0);
     }
-  } finally {
-    rl.close();
+
+    const trimmed = answer.trim();
+    if (!trimmed || trimmed.toLowerCase() === "skip") {
+      skipped.push(key);
+      continue;
+    }
+
+    const targetKey = key === "OPENCLAW_AGENT_ID|OPENCLAW_SESSION_ID|OPENCLAW_TO" ? "OPENCLAW_AGENT_ID" : key;
+    collected.push({ key: targetKey, value: trimmed });
+    process.env[targetKey] = trimmed;
   }
 
   return { collected, skipped };
@@ -356,33 +385,61 @@ async function promptForLlmProvider() {
     return { provider: null, skipped: true };
   }
 
-  const rl = readline.createInterface({ input, output });
+  const selection = await select({
+    message: "Choose an LLM provider for CodeSentinel:",
+    options: [
+      { value: "anthropic", label: "Anthropic" },
+      { value: "openai", label: "OpenAI" },
+      { value: "google", label: "Google" },
+      { value: "qwen", label: "Qwen" },
+      { value: "openrouter", label: "OpenRouter" },
+      { value: "skip", label: "Skip (configure later)" },
+    ],
+  });
 
-  try {
-    console.log("Choose an LLM provider for CodeSentinel:");
-    console.log("  1. Anthropic");
-    console.log("  2. OpenClaw CLI");
-    console.log("Press Enter to skip.");
-
-    while (true) {
-      const answer = (await rl.question("Provider [1/2]: ")).trim().toLowerCase();
-      if (!answer || answer === "skip") {
-        return { provider: null, skipped: true };
-      }
-      if (answer === "1" || answer === "anthropic") {
-        return { provider: "anthropic", skipped: false };
-      }
-      if (answer === "2" || answer === "openclaw-cli" || answer === "openclaw") {
-        return { provider: "openclaw-cli", skipped: false };
-      }
-      console.log("Enter 1 for Anthropic, 2 for OpenClaw CLI, or press Enter to skip.");
-    }
-  } finally {
-    rl.close();
+  if (isCancel(selection)) {
+    cancel("Onboarding cancelled.");
+    process.exit(0);
   }
+
+  if (selection === "skip") {
+    return { provider: null, skipped: true };
+  }
+
+  return { provider: selection, skipped: false };
+}
+
+function getOptionalLlmEnvForProvider(provider) {
+  if (provider === "anthropic") {
+    return ["ANTHROPIC_MODEL"];
+  }
+
+  if (provider === "openai") {
+    return ["OPENAI_MODEL"];
+  }
+
+  if (provider === "google") {
+    return ["GOOGLE_MODEL"];
+  }
+
+  if (provider === "qwen") {
+    return ["QWEN_MODEL"];
+  }
+
+  if (provider === "openrouter") {
+    return ["OPENROUTER_MODEL"];
+  }
+
+  return [];
 }
 
 async function cmdOnboard(values) {
+  const isInteractive = !values["non-interactive"] && process.stdin.isTTY;
+
+  if (isInteractive) {
+    intro("CodeSentinel Onboarding");
+  }
+
   const cwd = process.cwd();
   const envFile = path.join(cwd, ".env");
   const existingEnv = parseEnvFile(
@@ -393,6 +450,9 @@ async function cmdOnboard(values) {
       process.env[key] = value;
     }
   }
+
+  const s = isInteractive ? spinner() : null;
+  if (s) s.start("Checking workspace and tools...");
 
   const files = {
     soul: path.join(cwd, "workspace", "SOUL.md"),
@@ -420,8 +480,9 @@ async function cmdOnboard(values) {
     },
     docker: await checkCommand("docker", ["--version"]),
     python3: await checkCommand("python3", ["--version"]),
-    openclaw: await checkCommand("openclaw", ["--version"]),
   };
+
+  if (s) s.stop("Workspace checks complete.");
 
   const envChecks = {
     slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
@@ -442,7 +503,7 @@ async function cmdOnboard(values) {
   const collectedEntries = [];
   const skippedKeys = [];
 
-  if (!values["non-interactive"] && !getConfiguredLlmProvider()) {
+  if (isInteractive && !getConfiguredLlmProvider()) {
     onboardingCapture.prompted = true;
     const selection = await promptForLlmProvider();
     if (selection.provider) {
@@ -466,9 +527,19 @@ async function cmdOnboard(values) {
       .map((entry) => entry.name),
   ];
 
-  if (missingEnv.length > 0 && !values["non-interactive"]) {
+  if (missingEnv.length > 0 && isInteractive) {
     onboardingCapture.prompted = true;
     const prompted = await promptForEnv(missingEnv);
+    collectedEntries.push(...prompted.collected);
+    skippedKeys.push(...prompted.skipped);
+  }
+
+  const optionalLlmEnv = getOptionalLlmEnvForProvider(getConfiguredLlmProvider())
+    .filter((key) => !process.env[key]);
+  if (optionalLlmEnv.length > 0 && isInteractive) {
+    onboardingCapture.prompted = true;
+    note("Optional LLM settings: you can keep the defaults or customize them.");
+    const prompted = await promptForEnv(optionalLlmEnv);
     collectedEntries.push(...prompted.collected);
     skippedKeys.push(...prompted.skipped);
   }
@@ -507,9 +578,6 @@ async function cmdOnboard(values) {
   if (failedTools.includes("docker")) {
     nextSteps.push("Install Docker and ensure `docker --version` works.");
   }
-  if (failedTools.includes("openclaw")) {
-    nextSteps.push("Install OpenClaw CLI and run `npm run openclaw:doctor`.");
-  }
   if (failedFiles.length > 0) {
     nextSteps.push("Restore missing OpenClaw project files listed in `missingFiles`.");
   }
@@ -526,6 +594,14 @@ async function cmdOnboard(values) {
   if (ok) {
     nextSteps.push("Run `npm run server:start` and `npm run webhooks:start` in separate terminals.");
     nextSteps.push("Register a repo via `npm run cli -- register <repo_path_or_url>`.");
+  }
+
+  if (isInteractive) {
+    if (ok) {
+      outro("Onboarding successful! Ready to guard your repos.");
+    } else {
+      outro("Onboarding incomplete. See next steps below.");
+    }
   }
 
   console.log(
