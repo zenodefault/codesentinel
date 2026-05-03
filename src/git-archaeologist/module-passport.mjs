@@ -43,8 +43,11 @@ function fallbackSummary(passport) {
     passport.dependencyStatus.length > 0
       ? passport.dependencyStatus.map((entry) => `${entry.name}:${entry.riskLevel}`).join(", ")
       : "no tracked external dependency risk";
+  const ownerSummary = passport.ownership?.primaryOwner?.label
+    ? `Primary contact is ${passport.ownership.primaryOwner.label}${passport.ownership.likelyTeam ? ` via ${passport.ownership.likelyTeam.name}` : ""}.`
+    : "No clear owner is mapped yet.";
 
-  return `Module ${passport.module} has blast radius ${passport.blastRadiusScore}, ${passport.ghostAuthors.length} ghost author(s), and ${depSummary}. Review ghost-owned changes first and prioritize dependencies above MEDIUM risk.`;
+  return `Module ${passport.module} has blast radius ${passport.blastRadiusScore}, ${passport.ghostAuthors.length} ghost author(s), and ${depSummary}. ${ownerSummary} Review ghost-owned changes first and prioritize dependencies above MEDIUM risk.`;
 }
 
 async function generateRiskSummary(passport) {
@@ -99,6 +102,7 @@ export async function buildModulePassport(repoPath, repoName, filePath, archaeol
     blastRadiusScore: blastRadiusEntry.blastRadiusCount,
     blastRadius: blastRadiusEntry,
     ghostAuthors: archaeologyResult.ghostAuthors,
+    ownership: archaeologyResult.ownership,
     keyDecisions: archaeologyResult.jiraIssues,
     dependencyStatus,
   };

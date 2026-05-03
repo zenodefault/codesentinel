@@ -172,6 +172,8 @@ export function renderDashboardHtml() {
             <tr>
               <th><button data-sort="blastRadiusRows" data-field="repo">Repo</button></th>
               <th><button data-sort="blastRadiusRows" data-field="filePath">File</button></th>
+              <th><button data-sort="blastRadiusRows" data-field="owner">Owner</button></th>
+              <th><button data-sort="blastRadiusRows" data-field="team">Team</button></th>
               <th><button data-sort="blastRadiusRows" data-field="blastRadiusScore">Downstream</button></th>
               <th>Ghosts</th>
             </tr>
@@ -245,10 +247,12 @@ export function renderDashboardHtml() {
           <tr class="\${flash ? "flash" : ""}">
             <td>\${item.repo}</td>
             <td>\${item.filePath}</td>
+            <td>\${item.owner}</td>
+            <td>\${item.team}</td>
             <td>\${item.blastRadiusScore}</td>
             <td>\${item.ghostAuthors}</td>
           </tr>
-        \`).join("") || '<tr><td colspan="4" class="empty">No module passports found yet.</td></tr>';
+        \`).join("") || '<tr><td colspan="6" class="empty">No module passports found yet.</td></tr>';
 
         if (!payload.openActions.length) {
           actionsBody.className = "empty";

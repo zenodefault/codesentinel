@@ -77,7 +77,17 @@ Skills must treat the JSON block as the source of truth. Human-readable prose ca
 {
   "module": "src/example.ts",
   "generatedAt": null,
-  "summary": ""
+  "summary": "",
+  "ownership": {
+    "coverage": "explicit|inferred|unknown",
+    "primaryOwner": {
+      "label": "@team-member"
+    },
+    "likelyTeam": {
+      "name": "@org/platform"
+    },
+    "suggestedContacts": []
+  }
 }
 ```
 

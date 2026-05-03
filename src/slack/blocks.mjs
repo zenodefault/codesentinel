@@ -129,6 +129,13 @@ export function buildWhyBlocks(passport) {
     passport.ghostAuthors?.length
       ? passport.ghostAuthors.map((author) => `${author.email} (${author.commitCount} commit(s))`).join("\n")
       : "No ghost authors detected.";
+  const ownershipContacts =
+    passport.ownership?.suggestedContacts?.length
+      ? passport.ownership.suggestedContacts
+          .slice(0, 5)
+          .map((contact) => `- ${contact.label} [${contact.source}, ${contact.confidence}]`)
+          .join("\n")
+      : "No likely contacts found yet.";
   const decisions =
     passport.keyDecisions?.length
       ? passport.keyDecisions
@@ -163,6 +170,14 @@ export function buildWhyBlocks(passport) {
           type: "mrkdwn",
           text: `*Ghost ownership risk*\n${passport.ghostAuthors?.length ? "Review needed" : "Low"}`,
         },
+        {
+          type: "mrkdwn",
+          text: `*Primary owner*\n${passport.ownership?.primaryOwner?.label ?? "Unmapped"}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Likely team*\n${passport.ownership?.likelyTeam?.name ?? "Unassigned"}`,
+        },
       ],
     },
     {
@@ -177,6 +192,13 @@ export function buildWhyBlocks(passport) {
       text: {
         type: "mrkdwn",
         text: `*Ghost authors*\n${ghostAuthors}`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*Who to contact*\n${ownershipContacts}`,
       },
     },
     {

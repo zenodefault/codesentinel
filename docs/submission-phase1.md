@@ -9,6 +9,12 @@ Theme 3 - Productivity Platforms
 - Repository Analyzer and Build Feasibility Engine
 - Legacy Codebase Archaeologist
 
+## Problem Fit
+
+In large organizations, ownership is often unclear. Engineers do not know who owns a module, which team is responsible, or who should review a risky change. That slows down fixes, reviews, and decision-making right when speed matters most.
+
+CodeSentinel addresses this by mapping code to likely owners, teams, and supporting historical context. Instead of leaving engineers to guess, it suggests who to contact and surfaces ghost-owner risk directly in the workflow.
+
 ## Architecture
 
 Slack slash commands and GitHub/Twilio webhooks enter the CodeSentinel server. The server routes to `cve-sweep`, `git-archaeologist`, `pr-premortem`, `auto-fix`, and `rot-report`. Durable Memory in `workspace/memory/` is the system of record for dependency ledgers, blast radius maps, decision history, module passports, ghost authors, and upgrade deferrals. The Live Canvas dashboard and weekly DOCX reporting layer both read from the same memory store.
@@ -16,8 +22,9 @@ Slack slash commands and GitHub/Twilio webhooks enter the CodeSentinel server. T
 ## User Stories
 
 - As a tech lead, I can register a repository in Slack and immediately get a dependency risk baseline.
-- As an engineer, I can ask `/why {file}` and recover change intent, blast radius, and ghost-owner risk without digging through logs manually.
+- As an engineer, I can ask `/why {file}` and recover change intent, blast radius, ownership clues, and ghost-owner risk without digging through logs manually.
 - As a reviewer, I can receive auto-generated risk summaries and approval prompts before risky dependency fixes merge.
+- As a developer in a large org, I can see which owner or team is most likely responsible for a file so I know who to contact for fixes, reviews, or decisions.
 
 ## Seven-Step User Journey
 
