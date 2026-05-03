@@ -222,6 +222,28 @@ function requiredEnvStatus(names) {
   return names.map((name) => ({ name, present: Boolean(process.env[name]) }));
 }
 
+function getConfiguredLlmProvider() {
+  return (process.env.CODESENTINEL_LLM_PROVIDER ?? "").trim().toLowerCase();
+}
+
+function getLlmEnvChecks(provider) {
+  if (provider === "anthropic") {
+    return requiredEnvStatus(["ANTHROPIC_API_KEY"]);
+  }
+
+  if (provider === "openclaw-cli") {
+    const selectorKeys = ["OPENCLAW_AGENT_ID", "OPENCLAW_SESSION_ID", "OPENCLAW_TO"];
+    return [
+      {
+        name: "OPENCLAW_AGENT_ID|OPENCLAW_SESSION_ID|OPENCLAW_TO",
+        present: selectorKeys.some((key) => Boolean(process.env[key])),
+      },
+    ];
+  }
+
+  return [];
+}
+
 function parseEnvFile(raw) {
   const map = new Map();
   const lines = raw.split(/\r?\n/);
@@ -289,12 +311,17 @@ async function promptForEnv(missingEnv) {
   }
 
   const labels = {
+    ANTHROPIC_API_KEY: "Anthropic API Key",
     SLACK_SIGNING_SECRET: "Slack Signing Secret",
     SLACK_BOT_TOKEN: "Slack Bot Token",
     SLACK_WEBHOOK_URL: "Slack Incoming Webhook URL",
     SLACK_CHANNEL_ID: "Slack Channel ID",
     GITHUB_TOKEN: "GitHub Token",
     GITHUB_WEBHOOK_SECRET: "GitHub Webhook Secret",
+    "OPENCLAW_AGENT_ID|OPENCLAW_SESSION_ID|OPENCLAW_TO": "OpenClaw target (agent id, session id, or recipient)",
+    OPENCLAW_AGENT_ID: "OpenClaw Agent ID",
+    OPENCLAW_SESSION_ID: "OpenClaw Session ID",
+    OPENCLAW_TO: "OpenClaw recipient/target",
     TWILIO_ACCOUNT_SID: "Twilio Account SID",
     TWILIO_AUTH_TOKEN: "Twilio Auth Token",
     TWILIO_WHATSAPP_FROM: "Twilio WhatsApp From (e.g. whatsapp:+14155238886)",
@@ -313,14 +340,46 @@ async function promptForEnv(missingEnv) {
         skipped.push(key);
         continue;
       }
-      collected.push({ key, value: answer });
-      process.env[key] = answer;
+      const targetKey = key === "OPENCLAW_AGENT_ID|OPENCLAW_SESSION_ID|OPENCLAW_TO" ? "OPENCLAW_AGENT_ID" : key;
+      collected.push({ key: targetKey, value: answer });
+      process.env[targetKey] = answer;
     }
   } finally {
     rl.close();
   }
 
   return { collected, skipped };
+}
+
+async function promptForLlmProvider() {
+  if (!process.stdin.isTTY) {
+    return { provider: null, skipped: true };
+  }
+
+  const rl = readline.createInterface({ input, output });
+
+  try {
+    console.log("Choose an LLM provider for CodeSentinel:");
+    console.log("  1. Anthropic");
+    console.log("  2. OpenClaw CLI");
+    console.log("Press Enter to skip.");
+
+    while (true) {
+      const answer = (await rl.question("Provider [1/2]: ")).trim().toLowerCase();
+      if (!answer || answer === "skip") {
+        return { provider: null, skipped: true };
+      }
+      if (answer === "1" || answer === "anthropic") {
+        return { provider: "anthropic", skipped: false };
+      }
+      if (answer === "2" || answer === "openclaw-cli" || answer === "openclaw") {
+        return { provider: "openclaw-cli", skipped: false };
+      }
+      console.log("Enter 1 for Anthropic, 2 for OpenClaw CLI, or press Enter to skip.");
+    }
+  } finally {
+    rl.close();
+  }
 }
 
 async function cmdOnboard(values) {
@@ -368,35 +427,65 @@ async function cmdOnboard(values) {
     slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
     github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
     twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+    llmProvider: requiredEnvStatus(["CODESENTINEL_LLM_PROVIDER"]),
+    llm: getLlmEnvChecks(getConfiguredLlmProvider()),
   };
-
-  const missingEnv = Object.values(envChecks)
-    .flat()
-    .filter((entry) => !entry.present)
-    .map((entry) => entry.name);
 
   let onboardingCapture = {
     prompted: false,
     wroteEnvFile: false,
     collected: [],
     skipped: [],
+    llmProvider: getConfiguredLlmProvider() || null,
   };
+
+  const collectedEntries = [];
+  const skippedKeys = [];
+
+  if (!values["non-interactive"] && !getConfiguredLlmProvider()) {
+    onboardingCapture.prompted = true;
+    const selection = await promptForLlmProvider();
+    if (selection.provider) {
+      process.env.CODESENTINEL_LLM_PROVIDER = selection.provider;
+      collectedEntries.push({ key: "CODESENTINEL_LLM_PROVIDER", value: selection.provider });
+      onboardingCapture.llmProvider = selection.provider;
+    } else if (selection.skipped) {
+      skippedKeys.push("CODESENTINEL_LLM_PROVIDER");
+    }
+  }
+
+  const missingEnv = [
+    ...Object.values({
+      slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
+      github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
+      twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+      llm: getLlmEnvChecks(getConfiguredLlmProvider()),
+    })
+      .flat()
+      .filter((entry) => !entry.present)
+      .map((entry) => entry.name),
+  ];
 
   if (missingEnv.length > 0 && !values["non-interactive"]) {
     onboardingCapture.prompted = true;
     const prompted = await promptForEnv(missingEnv);
-    onboardingCapture.collected = prompted.collected.map((entry) => entry.key);
-    onboardingCapture.skipped = prompted.skipped;
-    if (prompted.collected.length > 0) {
-      await upsertEnvValues(envFile, prompted.collected);
-      onboardingCapture.wroteEnvFile = true;
-    }
+    collectedEntries.push(...prompted.collected);
+    skippedKeys.push(...prompted.skipped);
+  }
+
+  onboardingCapture.collected = [...new Set(collectedEntries.map((entry) => entry.key))];
+  onboardingCapture.skipped = [...new Set(skippedKeys)];
+  if (collectedEntries.length > 0) {
+    await upsertEnvValues(envFile, collectedEntries);
+    onboardingCapture.wroteEnvFile = true;
   }
 
   const refreshedEnvChecks = {
     slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
     github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
     twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+    llmProvider: requiredEnvStatus(["CODESENTINEL_LLM_PROVIDER"]),
+    llm: getLlmEnvChecks(getConfiguredLlmProvider()),
   };
 
   const remainingMissingEnv = Object.values(refreshedEnvChecks)
@@ -430,6 +519,9 @@ async function cmdOnboard(values) {
     } else {
       nextSteps.push("Fill remaining skipped/missing environment variables by rerunning `codesentinel onboard`.");
     }
+  }
+  if (!getConfiguredLlmProvider()) {
+    nextSteps.push("Choose an LLM provider by rerunning `codesentinel onboard` or setting `CODESENTINEL_LLM_PROVIDER` manually.");
   }
   if (ok) {
     nextSteps.push("Run `npm run server:start` and `npm run webhooks:start` in separate terminals.");
