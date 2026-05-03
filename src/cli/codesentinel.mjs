@@ -336,6 +336,7 @@ async function promptForEnv(missingEnv) {
     OPENROUTER_MODEL: "OpenRouter model override (optional)",
     QWEN_API_KEY: "Qwen API Key",
     QWEN_MODEL: "Qwen model override (optional)",
+    QWEN_BASE_URL: "Qwen Base URL (optional)",
     SLACK_SIGNING_SECRET: "Slack Signing Secret",
     SLACK_BOT_TOKEN: "Slack Bot Token",
     SLACK_WEBHOOK_URL: "Slack Incoming Webhook URL",
@@ -393,6 +394,7 @@ async function promptForLlmProvider() {
       { value: "google", label: "Google" },
       { value: "qwen", label: "Qwen" },
       { value: "openrouter", label: "OpenRouter" },
+      { value: "openclaw-cli", label: "OpenClaw (CLI)" },
       { value: "skip", label: "Skip (configure later)" },
     ],
   });
@@ -423,7 +425,7 @@ function getOptionalLlmEnvForProvider(provider) {
   }
 
   if (provider === "qwen") {
-    return ["QWEN_MODEL"];
+    return ["QWEN_MODEL", "QWEN_BASE_URL"];
   }
 
   if (provider === "openrouter") {
