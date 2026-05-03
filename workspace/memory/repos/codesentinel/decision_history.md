@@ -5,7 +5,7 @@ Git and ticket-derived decision context for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:22:37.491Z",
+  "updatedAt": "2026-05-03T13:06:43.867Z",
   "decisions": [
     {
       "filePath": "README.md",
@@ -136,6 +136,68 @@ Git and ticket-derived decision context for codesentinel.
         }
       ],
       "ghostOwnershipRisk": "HIGH",
+      "warnings": [
+        "Jira credentials are not configured; ticket enrichment was skipped.",
+        "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."
+      ]
+    },
+    {
+      "filePath": "src/server/dashboard-html.mjs",
+      "commitCount": 1,
+      "commits": [
+        {
+          "commitHash": "1b68b584acd2bae73104f675c4c9e3b49dd734f5",
+          "subject": "Build Dev 3 Slack, rot-report, and dashboard foundation",
+          "authorName": "Hemanth Kumar VJ",
+          "authorEmail": "chanducharan8183@gmail.com",
+          "authoredAt": "2026-05-03T01:25:59+05:30",
+          "ticketIds": []
+        }
+      ],
+      "jiraIssues": [],
+      "ghostAuthors": [
+        {
+          "repo": "codesentinel",
+          "filePath": "src/server/dashboard-html.mjs",
+          "email": "chanducharan8183@gmail.com",
+          "loginHint": "chanducharan8183",
+          "lastCommitDate": "2026-05-03T01:25:59+05:30",
+          "commitCount": 1,
+          "files": [
+            "src/server/dashboard-html.mjs"
+          ],
+          "matchingStrategy": "git-email-local-part-vs-github-login"
+        }
+      ],
+      "ghostOwnershipRisk": "HIGH",
+      "ownership": {
+        "filePath": "src/server/dashboard-html.mjs",
+        "coverage": "inferred",
+        "codeowners": null,
+        "likelyTeam": null,
+        "primaryOwner": {
+          "label": "Hemanth Kumar VJ <chanducharan8183@gmail.com>",
+          "type": "historical-author",
+          "source": "git-history",
+          "confidence": "low"
+        },
+        "suggestedContacts": [
+          {
+            "label": "Hemanth Kumar VJ <chanducharan8183@gmail.com>",
+            "type": "historical-author",
+            "source": "git-history",
+            "confidence": "low",
+            "reason": "1 commit(s) on src/server/dashboard-html.mjs, last touched 2026-05-03T01:25:59+05:30.",
+            "commitCount": 1,
+            "lastAuthoredAt": "2026-05-03T01:25:59+05:30",
+            "email": "chanducharan8183@gmail.com"
+          }
+        ],
+        "ownershipSignals": {
+          "codeownersOwners": 0,
+          "historicalAuthors": 1
+        }
+      },
       "warnings": [
         "Jira credentials are not configured; ticket enrichment was skipped.",
         "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."

@@ -52,6 +52,30 @@ Former contributors who still own meaningful historical context.
         "src/cve-sweep/run-cve-sweep.mjs"
       ],
       "matchingStrategy": "git-email-local-part-vs-github-login"
+    },
+    {
+      "repo": "codesentinel",
+      "filePath": "src/server/dashboard-html.mjs",
+      "email": "chanducharan8183@gmail.com",
+      "loginHint": "chanducharan8183",
+      "lastCommitDate": "2026-05-03T01:25:59+05:30",
+      "commitCount": 1,
+      "files": [
+        "src/server/dashboard-html.mjs"
+      ],
+      "matchingStrategy": "git-email-local-part-vs-github-login"
+    },
+    {
+      "repo": "codesentinel",
+      "filePath": "src/server/dashboard-html.mjs",
+      "email": "chanducharan8183@gmail.com",
+      "loginHint": "chanducharan8183",
+      "lastCommitDate": "2026-05-03T01:25:59+05:30",
+      "commitCount": 1,
+      "files": [
+        "src/server/dashboard-html.mjs"
+      ],
+      "matchingStrategy": "git-email-local-part-vs-github-login"
     }
   ]
 }

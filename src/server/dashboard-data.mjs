@@ -52,6 +52,9 @@ export async function buildDashboardData() {
         filePath: passport.module,
         blastRadiusScore: passport.blastRadiusScore ?? passport.blastRadius?.blastRadiusCount ?? 0,
         ghostAuthors: passport.ghostAuthors?.length ?? 0,
+        owner: passport.ownership?.primaryOwner?.label ?? "Unmapped",
+        team: passport.ownership?.likelyTeam?.name ?? "Unassigned",
+        contacts: (passport.ownership?.suggestedContacts ?? []).slice(0, 2).map((entry) => entry.label).join(", ") || "None",
         riskSummary: passport.riskSummary ?? "",
       });
     }

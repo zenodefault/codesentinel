@@ -3,6 +3,7 @@ import path from "node:path";
 import { buildBlastRadiusMap } from "../analysis/file-blast-radius.mjs";
 import { parseGitHistory } from "./git-history.mjs";
 import { identifyGhostAuthors } from "./ghost-authors.mjs";
+import { inferOwnership } from "./ownership.mjs";
 import { fetchJiraIssues } from "./jira.mjs";
 import { buildModulePassport } from "./module-passport.mjs";
 import { readRepoMemory, writeRepoMemory } from "../memory/memory.mjs";
@@ -34,6 +35,11 @@ const ghostAnalysis = await identifyGhostAuthors({
   filePath: values.file,
   commits: history,
 });
+const ownership = await inferOwnership({
+  repoPath,
+  filePath: values.file,
+  commits: history,
+});
 const blastRadiusMap = await buildBlastRadiusMap(repoPath);
 const currentMemory = await readRepoMemory(repoName);
 const updatedDecisionHistory = {
@@ -48,6 +54,7 @@ const updatedDecisionHistory = {
       jiraIssues: jira.issues,
       ghostAuthors: ghostAnalysis.ghostAuthors,
       ghostOwnershipRisk: ghostAnalysis.riskLevel,
+      ownership,
       warnings: [...jira.warnings, ...ghostAnalysis.warnings],
     },
   ],
@@ -62,6 +69,7 @@ await writeRepoMemory(repoName, "decisionHistory", updatedDecisionHistory);
 const archaeologyResult = {
   jiraIssues: jira.issues,
   ghostAuthors: ghostAnalysis.ghostAuthors,
+  ownership,
   warnings: [...jira.warnings, ...ghostAnalysis.warnings],
 };
 const modulePassport = await buildModulePassport(repoPath, repoName, values.file, archaeologyResult);
@@ -77,6 +85,7 @@ console.log(
       jiraIssues: jira.issues,
       ghostAuthors: ghostAnalysis.ghostAuthors,
       ghostOwnershipRisk: ghostAnalysis.riskLevel,
+      ownership,
       blastRadius: blastRadiusMap[values.file] ?? { directDependents: [], impactedFiles: [], blastRadiusCount: 0 },
       warnings: [...jira.warnings, ...ghostAnalysis.warnings],
       modulePassport,
