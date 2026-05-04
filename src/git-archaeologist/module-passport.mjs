@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
-import { readRepoMemory, writeModulePassport } from "../memory/memory.mjs";
+import { readRepoMemory, writeModulePassport, toPath } from "../memory/memory.mjs";
 
 function parseExternalImports(filePath, source) {
   const extension = path.extname(filePath);
@@ -122,6 +122,9 @@ export async function buildModulePassport(repoPath, repoName, filePath, archaeol
     warnings: [...archaeologyResult.warnings, ...(summary.warning ? [summary.warning] : [])],
   };
 
-  await writeModulePassport(repoName, filePath, finalPassport);
-  return finalPassport;
+  const passportFile = await writeModulePassport(repoName, filePath, finalPassport);
+  return {
+    path: toPath(passportFile),
+    content: finalPassport,
+  };
 }

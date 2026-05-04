@@ -13,7 +13,7 @@ function repoSlug(repoName) {
     .replace(/^-+|-+$/g, "");
 }
 
-function toPath(url) {
+export function toPath(url) {
   return new URL(url).pathname;
 }
 

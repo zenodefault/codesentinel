@@ -26,18 +26,20 @@ if (!values.file) {
 }
 
 const repoPath = path.resolve(values.repo ?? process.cwd());
-const history = await parseGitHistory(repoPath, values.file);
+const relativeFilePath = path.relative(repoPath, path.resolve(process.cwd(), values.file));
+
+const history = await parseGitHistory(repoPath, relativeFilePath);
 const ticketIds = [...new Set(history.flatMap((commit) => commit.ticketIds))];
 const jira = await fetchJiraIssues(ticketIds);
 const repoName = path.basename(repoPath);
 const ghostAnalysis = await identifyGhostAuthors({
   repoName,
-  filePath: values.file,
+  filePath: relativeFilePath,
   commits: history,
 });
 const ownership = await inferOwnership({
   repoPath,
-  filePath: values.file,
+  filePath: relativeFilePath,
   commits: history,
 });
 const blastRadiusMap = await buildBlastRadiusMap(repoPath);
@@ -46,9 +48,9 @@ const updatedDecisionHistory = {
   ...currentMemory.decisionHistory,
   updatedAt: new Date().toISOString(),
   decisions: [
-    ...currentMemory.decisionHistory.decisions.filter((entry) => entry.filePath !== values.file),
+    ...currentMemory.decisionHistory.decisions.filter((entry) => entry.filePath !== relativeFilePath),
     {
-      filePath: values.file,
+      filePath: relativeFilePath,
       commitCount: history.length,
       commits: history,
       jiraIssues: jira.issues,
@@ -72,21 +74,21 @@ const archaeologyResult = {
   ownership,
   warnings: [...jira.warnings, ...ghostAnalysis.warnings],
 };
-const modulePassport = await buildModulePassport(repoPath, repoName, values.file, archaeologyResult);
+const modulePassport = await buildModulePassport(repoPath, repoName, relativeFilePath, archaeologyResult);
 
 console.log(
   JSON.stringify(
     {
       repoName,
       repoPath,
-      filePath: values.file,
+      filePath: relativeFilePath,
       commitCount: history.length,
       commits: history,
       jiraIssues: jira.issues,
       ghostAuthors: ghostAnalysis.ghostAuthors,
       ghostOwnershipRisk: ghostAnalysis.riskLevel,
       ownership,
-      blastRadius: blastRadiusMap[values.file] ?? { directDependents: [], impactedFiles: [], blastRadiusCount: 0 },
+      blastRadius: blastRadiusMap[relativeFilePath] ?? { directDependents: [], impactedFiles: [], blastRadiusCount: 0 },
       warnings: [...jira.warnings, ...ghostAnalysis.warnings],
       modulePassport,
     },

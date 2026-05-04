@@ -5,7 +5,7 @@ Git and ticket-derived decision context for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-03T13:06:43.867Z",
+  "updatedAt": "2026-05-04T14:10:34.385Z",
   "decisions": [
     {
       "filePath": "README.md",
@@ -191,6 +191,68 @@ Git and ticket-derived decision context for codesentinel.
             "commitCount": 1,
             "lastAuthoredAt": "2026-05-03T01:25:59+05:30",
             "email": "chanducharan8183@gmail.com"
+          }
+        ],
+        "ownershipSignals": {
+          "codeownersOwners": 0,
+          "historicalAuthors": 1
+        }
+      },
+      "warnings": [
+        "Jira credentials are not configured; ticket enrichment was skipped.",
+        "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."
+      ]
+    },
+    {
+      "filePath": "workspace/DEV2.md",
+      "commitCount": 1,
+      "commits": [
+        {
+          "commitHash": "6950a554a12548761a240156fd4963a67db46fad",
+          "subject": "Implement Dev2 automation integrations and webhook flows",
+          "authorName": "gwenstacy190",
+          "authorEmail": "gwenstacysp14@gmail.com",
+          "authoredAt": "2026-05-03T00:13:27+05:30",
+          "ticketIds": []
+        }
+      ],
+      "jiraIssues": [],
+      "ghostAuthors": [
+        {
+          "repo": "codesentinel",
+          "filePath": "workspace/DEV2.md",
+          "email": "gwenstacysp14@gmail.com",
+          "loginHint": "gwenstacysp14",
+          "lastCommitDate": "2026-05-03T00:13:27+05:30",
+          "commitCount": 1,
+          "files": [
+            "workspace/DEV2.md"
+          ],
+          "matchingStrategy": "git-email-local-part-vs-github-login"
+        }
+      ],
+      "ghostOwnershipRisk": "HIGH",
+      "ownership": {
+        "filePath": "workspace/DEV2.md",
+        "coverage": "inferred",
+        "codeowners": null,
+        "likelyTeam": null,
+        "primaryOwner": {
+          "label": "gwenstacy190 <gwenstacysp14@gmail.com>",
+          "type": "historical-author",
+          "source": "git-history",
+          "confidence": "low"
+        },
+        "suggestedContacts": [
+          {
+            "label": "gwenstacy190 <gwenstacysp14@gmail.com>",
+            "type": "historical-author",
+            "source": "git-history",
+            "confidence": "low",
+            "reason": "1 commit(s) on workspace/DEV2.md, last touched 2026-05-03T00:13:27+05:30.",
+            "commitCount": 1,
+            "lastAuthoredAt": "2026-05-03T00:13:27+05:30",
+            "email": "gwenstacysp14@gmail.com"
           }
         ],
         "ownershipSignals": {

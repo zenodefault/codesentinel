@@ -5,7 +5,7 @@ Reverse dependency map for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-03T13:06:43.867Z",
+  "updatedAt": "2026-05-04T14:10:34.386Z",
   "files": {
     "scripts/lint-workspace.mjs": {
       "directDependents": [],
@@ -316,16 +316,6 @@ Reverse dependency map for codesentinel.
       ],
       "blastRadiusCount": 16
     },
-    "src/orchestrator/route-command.mjs": {
-      "directDependents": [],
-      "impactedFiles": [],
-      "blastRadiusCount": 0
-    },
-    "src/orchestrator/run-heartbeat-trigger.mjs": {
-      "directDependents": [],
-      "impactedFiles": [],
-      "blastRadiusCount": 0
-    },
     "src/pr-premortem/card.mjs": {
       "directDependents": [
         "src/pr-premortem/run-pr-premortem.mjs"
@@ -344,6 +334,16 @@ Reverse dependency map for codesentinel.
         "src/server/webhooks.mjs"
       ],
       "blastRadiusCount": 1
+    },
+    "src/orchestrator/route-command.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
+    },
+    "src/orchestrator/run-heartbeat-trigger.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
     },
     "src/reports/docx_builder.py": {
       "directDependents": [],
