@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import Anthropic from "@anthropic-ai/sdk";
 import { readRepoMemory, writeModulePassport } from "../memory/memory.mjs";
-import { generateText, getLlmProviderLabel } from "../llm/client.mjs";
 
 function parseExternalImports(filePath, source) {
   const extension = path.extname(filePath);
@@ -51,32 +51,40 @@ function fallbackSummary(passport) {
 }
 
 async function generateRiskSummary(passport) {
-  const provider = getLlmProviderLabel();
-
-  if (provider === "anthropic" && !process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return {
       summary: fallbackSummary(passport),
       warning: "ANTHROPIC_API_KEY is not configured; using deterministic fallback summary.",
     };
   }
 
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
   try {
-    return {
-      summary:
-        (await generateText({
-          prompt: `Summarize this module risk in plain English for engineers. Focus on why it matters and what to review first.\n\n${JSON.stringify(
+    const response = await client.messages.create({
+      model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
+      max_tokens: 300,
+      messages: [
+        {
+          role: "user",
+          content: `Summarize this module risk in plain English for engineers. Focus on why it matters and what to review first.\n\n${JSON.stringify(
             passport,
             null,
             2,
           )}`,
-          maxTokens: 300,
-        })) ?? fallbackSummary(passport),
+        },
+      ],
+    });
+
+    const textBlock = response.content.find((block) => block.type === "text");
+    return {
+      summary: textBlock?.text?.trim() ?? fallbackSummary(passport),
       warning: null,
     };
   } catch (error) {
     return {
       summary: fallbackSummary(passport),
-      warning: `${provider} summary generation failed: ${error.message}`,
+      warning: `Claude summary generation failed: ${error.message}`,
     };
   }
 }
