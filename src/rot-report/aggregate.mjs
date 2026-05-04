@@ -1,6 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
-import path from "node:path";
-import { listRegisteredRepos, MEMORY_ROOT, readRepoMemory, readSharedMemory } from "../memory/memory.mjs";
+import { listRegisteredRepos, readModulePassports, readRepoMemory, readSharedMemory } from "../memory/memory.mjs";
 import { parseJsonBlock } from "../memory/json-block.mjs";
 
 function classifyHealthScore(dependencies) {
@@ -33,24 +31,6 @@ function hasSeverityWorsened(decision, dependency) {
   const previous = Number(decision.riskScoreAtDecision ?? decision.actualRiskAtDecision ?? 0);
   const current = Number(dependency.actualRisk ?? 0);
   return current > previous || dependency.riskLevel === "CRITICAL";
-}
-
-async function readModulePassports(repoName) {
-  const moduleDir = path.join(new URL(MEMORY_ROOT).pathname, "repos", repoName, "module_passports");
-
-  try {
-    const entries = await readdir(moduleDir);
-    const passports = [];
-
-    for (const entry of entries) {
-      const raw = await readFile(path.join(moduleDir, entry), "utf8");
-      passports.push(parseJsonBlock(raw, entry));
-    }
-
-    return passports;
-  } catch {
-    return [];
-  }
 }
 
 export async function buildRotReport() {

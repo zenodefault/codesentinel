@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { parseArgs } from "node:util";
 import { intro, outro, select, text, spinner, isCancel, cancel, note } from "@clack/prompts";
 import dotenv from "dotenv";
-import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson } from "../memory/memory.mjs";
+import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson, readModulePassports } from "../memory/memory.mjs";
 
 const execFileAsync = promisify(execFile);
 dotenv.config();
@@ -20,6 +20,7 @@ Usage:
   codesentinel why <file_path> [--repo /path/to/repo]
   codesentinel report [--notify] [--output ./reports]
   codesentinel onboard [--non-interactive]
+  codesentinel ownership [--repo <repo_name>]
   codesentinel repos
 `);
 }
@@ -197,6 +198,58 @@ async function cmdReport(values) {
 async function cmdRepos() {
   const repos = await listRegisteredRepos();
   console.log(JSON.stringify({ command: "repos", repos }, null, 2));
+}
+
+async function cmdOwnership(rest, values) {
+  const repoName = values.repo;
+  let repos = [];
+
+  if (repoName) {
+    const registered = await listRegisteredRepos();
+    if (!registered.includes(repoName)) {
+      throw new Error(`Repo ${repoName} is not registered.`);
+    }
+    repos = [repoName];
+  } else {
+    repos = await listRegisteredRepos();
+  }
+
+  const unclearModules = [];
+
+  for (const repo of repos) {
+    const passports = await readModulePassports(repo);
+    for (const passport of passports) {
+      const isUnmapped = !passport.ownership?.primaryOwner?.label || passport.ownership.primaryOwner.label === "Unmapped";
+      const isUnassigned = !passport.ownership?.likelyTeam?.name || passport.ownership.likelyTeam.name === "Unassigned";
+      const hasGhostAuthors = (passport.ghostAuthors?.length ?? 0) > 0;
+
+      if (isUnmapped || isUnassigned || hasGhostAuthors) {
+        unclearModules.push({
+          repo,
+          module: passport.module,
+          owner: passport.ownership?.primaryOwner?.label ?? "Unmapped",
+          team: passport.ownership?.likelyTeam?.name ?? "Unassigned",
+          ghostAuthors: passport.ghostAuthors?.length ?? 0,
+          ghostOwnershipRisk: passport.ghostOwnershipRisk ?? "LOW",
+        });
+      }
+    }
+  }
+
+  console.log(
+    JSON.stringify(
+      {
+        command: "ownership",
+        unclearModules,
+        summary: {
+          totalUnclear: unclearModules.length,
+          reposScanned: repos.length,
+        },
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 async function pathExists(filePath) {
@@ -670,6 +723,11 @@ async function main() {
 
   if (command === "repos") {
     await cmdRepos();
+    return;
+  }
+
+  if (command === "ownership") {
+    await cmdOwnership(rest, values);
     return;
   }
 

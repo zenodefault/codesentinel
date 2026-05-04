@@ -1,26 +1,6 @@
-import { readFile, readdir } from "node:fs/promises";
-import path from "node:path";
-import { MEMORY_ROOT, listRegisteredRepos, readRepoMemory, readSharedMemory } from "../memory/memory.mjs";
+import { MEMORY_ROOT, listRegisteredRepos, readModulePassports, readRepoMemory, readSharedMemory } from "../memory/memory.mjs";
 import { parseJsonBlock } from "../memory/json-block.mjs";
 import { buildRotReport } from "../rot-report/aggregate.mjs";
-
-async function readModulePassports(repoName) {
-  const moduleDir = path.join(new URL(MEMORY_ROOT).pathname, "repos", repoName, "module_passports");
-
-  try {
-    const entries = await readdir(moduleDir);
-    const passports = [];
-
-    for (const entry of entries) {
-      const raw = await readFile(path.join(moduleDir, entry), "utf8");
-      passports.push(parseJsonBlock(raw, entry));
-    }
-
-    return passports;
-  } catch {
-    return [];
-  }
-}
 
 export async function buildDashboardData() {
   const repos = await listRegisteredRepos();

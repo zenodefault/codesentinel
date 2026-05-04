@@ -195,6 +195,28 @@ export async function writeRepoMemory(repoName, kind, data) {
   await writeMemoryJson(target.file, target.title, target.description, data);
 }
 
+export async function readModulePassports(repoName) {
+  const repo = getRepoMemoryPaths(repoName);
+  const moduleDir = toPath(repo.modulePassportsDir);
+
+  try {
+    const entries = await readdir(moduleDir);
+    const passports = [];
+
+    for (const entry of entries) {
+      if (!entry.endsWith(".md")) {
+        continue;
+      }
+      const raw = await readFile(path.join(moduleDir, entry), "utf8");
+      passports.push(parseJsonBlock(raw, entry));
+    }
+
+    return passports;
+  } catch {
+    return [];
+  }
+}
+
 export async function writeModulePassport(repoName, moduleName, data) {
   await ensureMemoryStructure(repoName);
   const repo = getRepoMemoryPaths(repoName);
