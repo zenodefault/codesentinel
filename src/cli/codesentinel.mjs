@@ -4,7 +4,7 @@ import { access, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { parseArgs } from "node:util";
-import { intro, outro, text, spinner, isCancel, cancel } from "@clack/prompts";
+import { intro, outro, select, text, spinner, isCancel, cancel, note } from "@clack/prompts";
 import dotenv from "dotenv";
 import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson, readModulePassports } from "../memory/memory.mjs";
 
@@ -15,13 +15,16 @@ function printUsage() {
   console.log(`CodeSentinel CLI
 
 Usage:
-  codesentinel register <repo_url_or_path> [--max-dependencies 25]
-  codesentinel scan <repo_name> [--max-dependencies 25]
-  codesentinel why <file_path> [--repo /path/to/repo]
+  codesentinel register [<repo_url_or_path>] [--max-dependencies 25]
+  codesentinel scan [<repo_name>] [--max-dependencies 25]
+  codesentinel why [<file_path>] [--repo /path/to/repo]
   codesentinel report [--notify] [--output ./reports]
-  codesentinel onboard [--non-interactive]
   codesentinel ownership [--repo <repo_name>]
+  codesentinel onboard
   codesentinel repos
+
+Interactive mode:
+  Run any command without arguments in a terminal to be guided through the process.
 `);
 }
 
@@ -51,12 +54,30 @@ async function findFirstTrackedFile(repoName) {
 }
 
 async function cmdRegister(positionals, values) {
-  const repoInput = positionals[0];
+  let repoInput = positionals[0];
+
+  if (!repoInput && process.stdin.isTTY) {
+    intro("CodeSentinel Registration");
+    repoInput = await text({
+      message: "Which repository would you like to register?",
+      placeholder: "GitHub URL or local filesystem path",
+    });
+
+    if (isCancel(repoInput)) {
+      cancel("Registration cancelled.");
+      process.exit(0);
+    }
+  }
+
   if (!repoInput) {
     throw new Error("register requires <repo_url_or_path>");
   }
 
   const repoName = parseRepoName(repoInput);
+  
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Registering ${repoName} and performing initial scan...`);
+
   await ensureMemoryStructure(repoName);
 
   const cveResult = await runJsonCommand([
@@ -83,37 +104,70 @@ async function cmdRegister(positionals, values) {
     }
   }
 
+  if (s) s.stop(`Registration complete for ${repoName}.`);
+
   const ledger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
-  console.log(
-    JSON.stringify(
-      {
-        command: "register",
-        repoName,
-        source: repoInput,
-        dependencies: ledger.dependencies?.length ?? cveResult.dependencyCount,
-        critical: ledger.alerts?.criticalDependencies?.length ?? 0,
-        archaeologyBootstrapped: Boolean(archaeology),
-      },
-      null,
-      2,
-    ),
-  );
+
+  if (process.stdin.isTTY && !values.json) {
+    const depCount = ledger.dependencies?.length ?? cveResult.dependencyCount;
+    const criticalCount = ledger.alerts?.criticalDependencies?.length ?? 0;
+    
+    note(`Repository ${repoName} is now registered in Durable Memory.\nSource: ${repoInput}`, "Registration Successful");
+    note(`Found ${depCount} dependencies and ${criticalCount} critical issues.`, "Initial Scan Summary");
+    if (archaeology) {
+      note(`Git archaeology bootstrapped using ${archaeology.filePath}.`, "Archaeology Status");
+    }
+    outro("Registration complete.");
+  } else {
+    console.log(
+      JSON.stringify(
+        {
+          command: "register",
+          repoName,
+          source: repoInput,
+          dependencies: ledger.dependencies?.length ?? cveResult.dependencyCount,
+          critical: ledger.alerts?.criticalDependencies?.length ?? 0,
+          archaeologyBootstrapped: Boolean(archaeology),
+        },
+        null,
+        2,
+      ),
+    );
+  }
 }
 
 async function cmdScan(positionals, values) {
-  const repoName = positionals[0];
+  let repoName = positionals[0];
+  const registered = await listRegisteredRepos();
+
+  if (!repoName && process.stdin.isTTY) {
+    intro("CodeSentinel Dependency Scan");
+    repoName = await select({
+      message: "Which repository would you like to scan?",
+      options: registered.map((repo) => ({ value: repo, label: repo })),
+    });
+
+    if (isCancel(repoName)) {
+      cancel("Scan cancelled.");
+      process.exit(0);
+    }
+  }
+
   if (!repoName) {
     throw new Error("scan requires <repo_name>");
   }
 
-  const repos = await listRegisteredRepos();
-  if (!repos.includes(repoName)) {
+  if (!registered.includes(repoName)) {
     throw new Error(`Repo ${repoName} is not registered in Durable Memory.`);
   }
+
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Scanning dependencies for ${repoName}...`);
 
   const ledger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
   const sourceInput = ledger.source?.input ?? path.dirname(ledger.manifest?.path ?? "");
   if (!sourceInput) {
+    if (s) s.stop("Scan failed.");
     throw new Error(`Repo ${repoName} has no source input in memory.`);
   }
 
@@ -127,28 +181,59 @@ async function cmdScan(positionals, values) {
     String(values["max-dependencies"] ?? 25),
   ]);
 
-  console.log(
-    JSON.stringify(
-      {
-        command: "scan",
-        repoName,
-        dependencyCount: scan.dependencyCount,
-        directDependencyCount: scan.directDependencyCount,
-        criticalAlerts: scan.alerts?.length ?? 0,
-      },
-      null,
-      2,
-    ),
-  );
+  if (s) s.stop(`Scan complete for ${repoName}.`);
+
+  if (process.stdin.isTTY && !values.json) {
+    const critical = scan.alerts?.length ?? 0;
+    note(`Found ${scan.dependencyCount} dependencies (${scan.directDependencyCount} direct).`, `Scan Results: ${repoName}`);
+    if (critical > 0) {
+      note(`${critical} critical alerts identified. Review with 'npm run cli -- report'.`, "Alerts");
+    } else {
+      note("No critical alerts found.", "Alerts");
+    }
+    outro("Scan complete.");
+  } else {
+    console.log(
+      JSON.stringify(
+        {
+          command: "scan",
+          repoName,
+          dependencyCount: scan.dependencyCount,
+          directDependencyCount: scan.directDependencyCount,
+          criticalAlerts: scan.alerts?.length ?? 0,
+        },
+        null,
+        2,
+      ),
+    );
+  }
 }
 
 async function cmdWhy(positionals, values) {
-  const filePath = positionals[0];
+  let filePath = positionals[0];
+
+  if (!filePath && process.stdin.isTTY) {
+    intro("CodeSentinel Archaeologist");
+    filePath = await text({
+      message: "Which file do you want to investigate?",
+      placeholder: "e.g., src/index.js",
+    });
+
+    if (isCancel(filePath)) {
+      cancel("Investigation cancelled.");
+      process.exit(0);
+    }
+  }
+
   if (!filePath) {
     throw new Error("why requires <file_path>");
   }
 
   const repoRoot = path.resolve(values.repo ?? process.cwd());
+  
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Digging through git history for ${filePath}...`);
+
   const result = await runJsonCommand([
     "./src/git-archaeologist/run-git-archaeologist.mjs",
     "--repo",
@@ -157,62 +242,131 @@ async function cmdWhy(positionals, values) {
     filePath,
   ]);
 
-  console.log(
-    JSON.stringify(
-      {
-        command: "why",
-        repoName: result.repoName,
-        filePath: result.filePath,
-        commitCount: result.commitCount,
-        ghostOwnershipRisk: result.ghostOwnershipRisk,
-        passportPath: result.modulePassport?.path ?? null,
-      },
-      null,
-      2,
-    ),
-  );
+  if (s) s.stop(`Analysis complete for ${filePath}.`);
+
+  const passport = result.modulePassport?.content ?? result.modulePassport;
+
+  if (process.stdin.isTTY && !values.json) {
+    const summary = passport?.riskSummary || "No summary available.";
+    const ownerLabel = passport?.ownership?.primaryOwner?.label || "Unmapped";
+    const teamLabel = passport?.ownership?.likelyTeam?.name || "Unassigned";
+    const ghostCount = passport?.ghostAuthors?.length || 0;
+    const ghostRisk = result.ghostOwnershipRisk || "LOW";
+    
+    note(summary, `Risk Summary: ${result.filePath}`);
+    
+    const details = `Owner: ${ownerLabel}\nTeam: ${teamLabel}\nCommits: ${result.commitCount}\nGhost Authors: ${ghostCount} (Risk: ${ghostRisk})`;
+    note(details, "Module Metadata");
+    
+    if (result.modulePassport?.path) {
+      note(`Full passport saved to: ${result.modulePassport.path}`, "Passport Artifact");
+    }
+    
+    outro("Investigation complete.");
+  } else {
+    console.log(
+      JSON.stringify(
+        {
+          command: "why",
+          repoName: result.repoName,
+          filePath: result.filePath,
+          commitCount: result.commitCount,
+          ghostOwnershipRisk: result.ghostOwnershipRisk,
+          passportPath: result.modulePassport?.path ?? null,
+        },
+        null,
+        2,
+      ),
+    );
+  }
 }
 
 async function cmdReport(values) {
+  const isInteractive = process.stdin.isTTY && !values.json;
+  if (isInteractive) {
+    intro("CodeSentinel Weekly Report");
+  }
+
+  const s = isInteractive ? spinner() : null;
+  if (s) s.start("Generating comprehensive weekly security and ownership report...");
+
   const args = ["./src/reports/run-weekly-report.mjs", "--output", values.output ?? "reports"];
   if (values.notify) {
     args.push("--notify");
   }
 
   const report = await runJsonCommand(args);
-  console.log(
-    JSON.stringify(
-      {
-        command: "report",
-        outputPath: report.outputPath,
-        repoCount: report.report?.repoCount,
-        criticalCount: report.report?.counts?.CRITICAL,
-        slackSent: report.slack?.sent,
-      },
-      null,
-      2,
-    ),
-  );
+  
+  if (s) s.stop("Report generation complete.");
+
+  if (isInteractive) {
+    note(`Report saved to: ${report.outputPath}`, "Report Location");
+    note(`Analyzed ${report.report?.repoCount || 0} repositories.\nFound ${report.report?.counts?.CRITICAL || 0} critical issues.`, "Summary");
+    if (report.slack?.sent) {
+      note("The report has been uploaded to Slack.", "Notification");
+    }
+    outro("Report ready.");
+  } else {
+    console.log(
+      JSON.stringify(
+        {
+          command: "report",
+          outputPath: report.outputPath,
+          repoCount: report.report?.repoCount,
+          criticalCount: report.report?.counts?.CRITICAL,
+          slackSent: report.slack?.sent,
+        },
+        null,
+        2,
+      ),
+    );
+  }
 }
 
 async function cmdRepos() {
   const repos = await listRegisteredRepos();
-  console.log(JSON.stringify({ command: "repos", repos }, null, 2));
+  if (process.stdin.isTTY) {
+    intro("Registered Repositories");
+    note(repos.join("\n") || "No repositories registered yet.", "Inventory");
+    outro("Use 'register' to add more.");
+  } else {
+    console.log(JSON.stringify({ command: "repos", repos }, null, 2));
+  }
 }
 
 async function cmdOwnership(rest, values) {
-  const repoName = values.repo;
-  let repos = [];
+  let repoName = values.repo;
+  const registered = await listRegisteredRepos();
 
+  if (!repoName && process.stdin.isTTY) {
+    intro("CodeSentinel Ownership Audit");
+    repoName = await select({
+      message: "Which repository would you like to audit? (Select 'All' to scan everything)",
+      options: [
+        { value: "all", label: "All Repositories" },
+        ...registered.map((repo) => ({ value: repo, label: repo })),
+      ],
+    });
+
+    if (isCancel(repoName)) {
+      cancel("Audit cancelled.");
+      process.exit(0);
+    }
+    if (repoName === "all") repoName = null;
+  }
+
+  let repos = [];
   if (repoName) {
-    const registered = await listRegisteredRepos();
     if (!registered.includes(repoName)) {
       throw new Error(`Repo ${repoName} is not registered.`);
     }
     repos = [repoName];
   } else {
-    repos = await listRegisteredRepos();
+    repos = registered;
   }
+
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Auditing ownership across ${repos.length} repos...`);
 
   const unclearModules = [];
 
@@ -236,20 +390,34 @@ async function cmdOwnership(rest, values) {
     }
   }
 
-  console.log(
-    JSON.stringify(
-      {
-        command: "ownership",
-        unclearModules,
-        summary: {
-          totalUnclear: unclearModules.length,
-          reposScanned: repos.length,
+  if (s) s.stop("Ownership audit complete.");
+
+  if (process.stdin.isTTY && !values.json) {
+    if (unclearModules.length === 0) {
+      note("No modules with unclear ownership found. Great job!", "Ownership Audit");
+    } else {
+      const list = unclearModules.slice(0, 10).map((m) => `• ${m.repo}: ${m.module} (${m.owner})`).join("\n");
+      const overflow = unclearModules.length > 10 ? `\n...and ${unclearModules.length - 10} more.` : "";
+      note(`${list}${overflow}`, `Unclear Ownership: ${unclearModules.length} modules found`);
+      note("Run with --json to see the full list.", "Pro Tip");
+    }
+    outro("Audit complete.");
+  } else {
+    console.log(
+      JSON.stringify(
+        {
+          command: "ownership",
+          unclearModules,
+          summary: {
+            totalUnclear: unclearModules.length,
+            reposScanned: repos.length,
+          },
         },
-      },
-      null,
-      2,
-    ),
-  );
+        null,
+        2,
+      ),
+    );
+  }
 }
 
 async function pathExists(filePath) {
@@ -539,6 +707,7 @@ async function main() {
       notify: { type: "boolean", default: false },
       "max-dependencies": { type: "string", default: "25" },
       "non-interactive": { type: "boolean", default: false },
+      json: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
   });
