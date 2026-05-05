@@ -86,7 +86,7 @@ async function generateWhatCouldGoWrong({ repoName, pullNumber, files, ghostOwne
 }
 
 export async function generatePremortem({ repoName, fullRepoName, pullNumber, changedFiles }) {
-  const repoPaths = getRepoMemoryPaths(repoName);
+  const repoPaths = await getRepoMemoryPaths(repoName);
   const dependencyLedger = await readMemoryJson(repoPaths.dependencyLedger);
   const blastRadiusMap = await readMemoryJson(repoPaths.blastRadiusMap);
   const ghostAuthorsShared = await readMemoryJson(new URL("../../workspace/memory/ghost_authors.md", import.meta.url));

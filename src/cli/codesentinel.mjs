@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { execFile } from "node:child_process";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { parseArgs } from "node:util";
-import { intro, outro, select, text, spinner, isCancel, cancel, note } from "@clack/prompts";
+import { intro, outro, select, text, spinner, isCancel, cancel, note, confirm } from "@clack/prompts";
 import dotenv from "dotenv";
-import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson, readModulePassports } from "../memory/memory.mjs";
+import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson, readModulePassports, registerRepoPath } from "../memory/memory.mjs";
 
 const execFileAsync = promisify(execFile);
 dotenv.config();
@@ -48,8 +48,8 @@ async function runJsonCommand(args) {
 }
 
 async function findFirstTrackedFile(repoName) {
-  const blastPath = getRepoMemoryPaths(repoName).blastRadiusMap;
-  const blast = await readMemoryJson(blastPath);
+  const paths = await getRepoMemoryPaths(repoName);
+  const blast = await readMemoryJson(paths.blastRadiusMap);
   return Object.keys(blast.files ?? {}).sort()[0] ?? null;
 }
 
@@ -75,6 +75,29 @@ async function cmdRegister(positionals, values) {
 
   const repoName = parseRepoName(repoInput);
   
+  let useInRepo = values["in-repo"];
+  if (!useInRepo && process.stdin.isTTY && !values["non-interactive"]) {
+    useInRepo = await confirm({
+      message: `Store Durable Memory inside ${repoName} for team sharing? (.codesentinel folder)`,
+      initialValue: true,
+    });
+    
+    if (isCancel(useInRepo)) {
+      cancel("Registration cancelled.");
+      process.exit(0);
+    }
+  }
+
+  if (isLocalPath(repoInput)) {
+    await registerRepoPath(repoName, repoInput);
+    if (useInRepo) {
+      const inRepoPath = path.join(path.resolve(repoInput), ".codesentinel");
+      await mkdir(inRepoPath, { recursive: true });
+    }
+  } else {
+    await registerRepoPath(repoName, process.cwd());
+  }
+
   const s = process.stdin.isTTY ? spinner() : null;
   if (s) s.start(`Registering ${repoName} and performing initial scan...`);
 
@@ -106,7 +129,8 @@ async function cmdRegister(positionals, values) {
 
   if (s) s.stop(`Registration complete for ${repoName}.`);
 
-  const ledger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
+  const repoPaths = await getRepoMemoryPaths(repoName);
+  const ledger = await readMemoryJson(repoPaths.dependencyLedger);
 
   if (process.stdin.isTTY && !values.json) {
     const depCount = ledger.dependencies?.length ?? cveResult.dependencyCount;
@@ -164,7 +188,8 @@ async function cmdScan(positionals, values) {
   const s = process.stdin.isTTY ? spinner() : null;
   if (s) s.start(`Scanning dependencies for ${repoName}...`);
 
-  const ledger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
+  const repoPaths = await getRepoMemoryPaths(repoName);
+  const ledger = await readMemoryJson(repoPaths.dependencyLedger);
   const sourceInput = ledger.source?.input ?? path.dirname(ledger.manifest?.path ?? "");
   if (!sourceInput) {
     if (s) s.stop("Scan failed.");
@@ -703,6 +728,7 @@ async function main() {
     allowPositionals: true,
     options: {
       repo: { type: "string" },
+      "in-repo": { type: "boolean", default: false },
       output: { type: "string", default: "reports" },
       notify: { type: "boolean", default: false },
       "max-dependencies": { type: "string", default: "25" },

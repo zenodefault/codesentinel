@@ -36,8 +36,8 @@ function countByRisk(dependencies) {
 }
 
 async function findFirstTrackedFile(repoName) {
-  const blastPath = getRepoMemoryPaths(repoName).blastRadiusMap;
-  const blast = await readMemoryJson(blastPath);
+  const repoPaths = await getRepoMemoryPaths(repoName);
+  const blast = await readMemoryJson(repoPaths.blastRadiusMap);
   return Object.keys(blast.files ?? {}).sort()[0] ?? null;
 }
 
@@ -72,8 +72,9 @@ async function handleRegister(text) {
     await runJsonCommand(["./src/git-archaeologist/run-git-archaeologist.mjs", "--repo", repoInput, "--file", archaeologyFile]);
   }
 
-  const dependencyLedger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
-  const modulePassportDir = path.join(new URL(MEMORY_ROOT).pathname, "repos", repoName, "module_passports");
+  const repoPaths = await getRepoMemoryPaths(repoName);
+  const dependencyLedger = await readMemoryJson(repoPaths.dependencyLedger);
+  const modulePassportDir = repoPaths.modulePassportsDir.pathname;
   let modulePassportCount = 0;
 
   try {
@@ -143,7 +144,8 @@ async function handleScan(text) {
     };
   }
 
-  const dependencyLedger = await readMemoryJson(getRepoMemoryPaths(repoName).dependencyLedger);
+  const repoPaths = await getRepoMemoryPaths(repoName);
+  const dependencyLedger = await readMemoryJson(repoPaths.dependencyLedger);
   const repoInput = dependencyLedger.source?.input ?? path.dirname(dependencyLedger.manifest?.path ?? "");
 
   if (!repoInput) {

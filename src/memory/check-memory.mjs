@@ -6,13 +6,13 @@ import {
   readMemoryJson,
 } from "./memory.mjs";
 
-const demoRepo = "demo-repo";
+const targetRepo = "codesentinel";
 
 try {
-  await ensureMemoryStructure(demoRepo);
+  await ensureMemoryStructure(targetRepo);
 
   const shared = getSharedMemoryPaths();
-  const repo = getRepoMemoryPaths(demoRepo);
+  const repo = await getRepoMemoryPaths(targetRepo);
 
   await readMemoryJson(shared.upgradeDecisions);
   await readMemoryJson(shared.ghostAuthors);

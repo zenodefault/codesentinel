@@ -1,9 +1,10 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseJsonBlock } from "./json-block.mjs";
 
 export const MEMORY_ROOT = new URL("../../workspace/memory/", import.meta.url);
 export const REPOS_ROOT = new URL("./repos/", MEMORY_ROOT);
+export const REPO_MAP_PATH = new URL("./repo_map.json", MEMORY_ROOT);
 
 function repoSlug(repoName) {
   return repoName
@@ -33,18 +34,50 @@ async function ensureFile(url, contents) {
   }
 }
 
-export function getRepoMemoryPaths(repoName) {
-  const slug = repoSlug(repoName);
-
-  if (!slug) {
-    throw new Error("repoName must resolve to a non-empty slug.");
+async function getRepoPathFromMap(repoName) {
+  try {
+    const raw = await readFile(REPO_MAP_PATH, "utf8");
+    const map = JSON.parse(raw);
+    return map[repoName] ?? null;
+  } catch {
+    return null;
   }
+}
 
-  const repoRoot = new URL(`./${slug}/`, REPOS_ROOT);
+export async function registerRepoPath(repoName, repoPath) {
+  let map = {};
+  try {
+    const raw = await readFile(REPO_MAP_PATH, "utf8");
+    map = JSON.parse(raw);
+  } catch {
+    map = {};
+  }
+  map[repoName] = path.resolve(repoPath);
+  await writeFile(REPO_MAP_PATH, JSON.stringify(map, null, 2), "utf8");
+}
+
+export async function getRepoMemoryPaths(repoName) {
+  const slug = repoSlug(repoName);
+  const mappedPath = await getRepoPathFromMap(repoName);
+  
+  let repoRoot = new URL(`./${slug}/`, REPOS_ROOT);
+  let storageType = "central";
+
+  if (mappedPath) {
+    const inRepoPath = path.join(mappedPath, ".codesentinel");
+    try {
+      await access(inRepoPath);
+      repoRoot = new URL(`file://${inRepoPath}/`);
+      storageType = "in-repo";
+    } catch {
+      // Fallback to central
+    }
+  }
 
   return {
     slug,
     repoRoot,
+    storageType,
     dependencyLedger: new URL("./dependency_ledger.md", repoRoot),
     blastRadiusMap: new URL("./blast_radius_map.md", repoRoot),
     modulePassportsDir: new URL("./module_passports/", repoRoot),
@@ -88,10 +121,18 @@ export async function ensureMemoryStructure(repoName) {
     return;
   }
 
-  const repo = getRepoMemoryPaths(repoName);
+  const repo = await getRepoMemoryPaths(repoName);
 
   await ensureDir(repo.repoRoot);
   await ensureDir(repo.modulePassportsDir);
+
+  if (repo.storageType === "in-repo") {
+    await ensureFile(
+      new URL("./README.md", repo.repoRoot),
+      "# CodeSentinel Durable Memory\n\nThis folder contains AI-generated Module Passports, Blast Radius Maps, and Dependency Ledgers. Commit this folder to share knowledge across your team.\n",
+    );
+  }
+
   await ensureFile(
     repo.dependencyLedger,
     buildMarkdown(
@@ -154,7 +195,7 @@ export async function readSharedMemory(kind) {
 
 export async function readRepoMemory(repoName) {
   await ensureMemoryStructure(repoName);
-  const repo = getRepoMemoryPaths(repoName);
+  const repo = await getRepoMemoryPaths(repoName);
 
   return {
     repo: repo.slug,
@@ -166,7 +207,7 @@ export async function readRepoMemory(repoName) {
 
 export async function writeRepoMemory(repoName, kind, data) {
   await ensureMemoryStructure(repoName);
-  const repo = getRepoMemoryPaths(repoName);
+  const repo = await getRepoMemoryPaths(repoName);
 
   const fileMap = {
     dependencyLedger: {
@@ -196,7 +237,7 @@ export async function writeRepoMemory(repoName, kind, data) {
 }
 
 export async function readModulePassports(repoName) {
-  const repo = getRepoMemoryPaths(repoName);
+  const repo = await getRepoMemoryPaths(repoName);
   const moduleDir = toPath(repo.modulePassportsDir);
 
   try {
@@ -219,7 +260,7 @@ export async function readModulePassports(repoName) {
 
 export async function writeModulePassport(repoName, moduleName, data) {
   await ensureMemoryStructure(repoName);
-  const repo = getRepoMemoryPaths(repoName);
+  const repo = await getRepoMemoryPaths(repoName);
   const safeModuleName = `${moduleName.replace(/[^a-zA-Z0-9._-]+/g, "_")}.md`;
   const passportFile = new URL(`./${safeModuleName}`, repo.modulePassportsDir);
 
@@ -263,7 +304,7 @@ export async function appendSharedMemory(kind, entry) {
   await writeMemoryJson(target.file, target.title, target.description, current);
 }
 
-export function resolveRepoPath(repoName, ...segments) {
-  const { repoRoot } = getRepoMemoryPaths(repoName);
+export async function resolveRepoPath(repoName, ...segments) {
+  const { repoRoot } = await getRepoMemoryPaths(repoName);
   return path.join(toPath(repoRoot), ...segments);
 }
