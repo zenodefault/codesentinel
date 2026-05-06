@@ -8,6 +8,7 @@ import { intro, outro, select, text, spinner, isCancel, cancel, note, confirm } 
 import dotenv from "dotenv";
 import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson, readModulePassports, registerRepoPath } from "../memory/memory.mjs";
 import { generateStandupReport } from "../orchestrator/standup.mjs";
+import { identifyNewOnboardingContext, buildOnboardingMessage } from "../orchestrator/onboarding-buddy.mjs";
 import { generatePremortem, postPremortemComment } from "../pr-premortem/run-pr-premortem.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -24,6 +25,7 @@ Usage:
   codesentinel ownership [--repo <repo_name>]
   codesentinel standup [--repo <repo_name>] [--days 1]
   codesentinel pr-premortem --repo <repo_name> --repo-full-name <org/repo> --pr <number> [--files <comma_files>]
+  codesentinel onboard-buddy --repo <repo_name> --author <name_or_email> --files <comma_files>
   codesentinel onboard
   codesentinel repos
 
@@ -527,6 +529,43 @@ async function cmdPrPremortem(values) {
   }
 }
 
+async function cmdOnboardBuddy(values) {
+  if (!values.repo || !values.author || !values.files) {
+    throw new Error("onboard-buddy requires --repo, --author and --files");
+  }
+
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Identifying onboarding context for ${values.author}...`);
+
+  const changedFiles = values.files
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  const contexts = await identifyNewOnboardingContext({
+    repoName: values.repo,
+    authorEmail: values.author,
+    authorLogin: values.author,
+    changedFiles,
+  });
+
+  if (s) s.stop("Search complete.");
+
+  if (contexts.length === 0) {
+    note("No new module contexts identified for this author.", "Onboarding Buddy");
+    return;
+  }
+
+  const message = buildOnboardingMessage(contexts);
+
+  if (process.stdin.isTTY && !values.json) {
+    console.log(message);
+    outro("Onboarding context generated.");
+  } else {
+    console.log(JSON.stringify({ contexts, message }, null, 2));
+  }
+}
+
 async function pathExists(filePath) {
   try {
     await access(filePath);
@@ -942,6 +981,7 @@ async function main() {
       repo: { type: "string" },
       "repo-full-name": { type: "string" },
       pr: { type: "string" },
+      author: { type: "string" },
       files: { type: "string" },
       days: { type: "string", default: "1" },
       "in-repo": { type: "boolean", default: false },
@@ -998,6 +1038,11 @@ async function main() {
 
   if (command === "pr-premortem") {
     await cmdPrPremortem(values);
+    return;
+  }
+
+  if (command === "onboard-buddy") {
+    await cmdOnboardBuddy(values);
     return;
   }
 
