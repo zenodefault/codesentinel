@@ -29,11 +29,12 @@ export async function promptLlm(prompt, options = {}) {
     const { default: OpenAI } = await import("openai");
     
     let baseURL = undefined;
-    let model = process.env.OPENAI_MODEL ?? "gpt-4-turbo";
+    let model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
 
     if (provider === "openrouter") {
       baseURL = "https://openrouter.ai/api/v1";
-      model = process.env.OPENROUTER_MODEL ?? "anthropic/claude-3.5-sonnet";
+      // Use a broadly available OpenRouter default model to avoid endpoint 404s.
+      model = process.env.OPENROUTER_MODEL ?? "openai/gpt-4o-mini";
     } else if (provider === "qwen") {
       baseURL = process.env.QWEN_BASE_URL ?? "https://dashscope.aliyuncs.com/compatible-mode/v1";
       model = process.env.QWEN_MODEL ?? "qwen-max";
