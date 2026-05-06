@@ -40,6 +40,7 @@ async function handlePullRequestEvent(payload) {
   const pullNumber = payload.pull_request.number;
   const baseBranch = payload.pull_request.base?.ref ?? "unknown";
   const author = payload.pull_request.user?.login ?? "unknown";
+  const authorEmail = payload.pull_request.user?.email ?? ""; 
   const { owner, repo } = parseRepoFullName(fullRepoName);
   const files = await listPullRequestFiles(owner, repo, pullNumber);
   const changedFiles = files.map((entry) => entry.filename);
@@ -57,6 +58,25 @@ async function handlePullRequestEvent(payload) {
     markdown: premortem.markdown,
   });
 
+  // Onboarding Buddy
+  const onboardingContexts = await identifyNewOnboardingContext({
+    repoName,
+    authorEmail,
+    authorLogin: author,
+    changedFiles,
+  });
+
+  let onboardingPosted = null;
+  if (onboardingContexts.length > 0) {
+    const message = buildOnboardingMessage(onboardingContexts);
+    const markedMessage = `${ONBOARDING_MARKER}\n${message}`;
+    
+    const existing = await findExistingPremortemComment(owner, repo, pullNumber, ONBOARDING_MARKER);
+    if (!existing) {
+      onboardingPosted = await createIssueComment(owner, repo, pullNumber, markedMessage);
+    }
+  }
+
   return {
     skipped: false,
     repo: fullRepoName,
@@ -65,6 +85,7 @@ async function handlePullRequestEvent(payload) {
     author,
     changedFiles,
     comment: posted,
+    onboarding: onboardingPosted ? "posted" : "skipped_or_already_exists",
   };
 }
 

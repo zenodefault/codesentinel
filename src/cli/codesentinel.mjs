@@ -7,6 +7,8 @@ import { parseArgs } from "node:util";
 import { intro, outro, select, text, spinner, isCancel, cancel, note, confirm } from "@clack/prompts";
 import dotenv from "dotenv";
 import { ensureMemoryStructure, getRepoMemoryPaths, listRegisteredRepos, readMemoryJson, readModulePassports, registerRepoPath } from "../memory/memory.mjs";
+import { generateStandupReport } from "../orchestrator/standup.mjs";
+import { generatePremortem, postPremortemComment } from "../pr-premortem/run-pr-premortem.mjs";
 
 const execFileAsync = promisify(execFile);
 dotenv.config();
@@ -20,6 +22,8 @@ Usage:
   codesentinel why [<file_path>] [--repo /path/to/repo]
   codesentinel report [--notify] [--output ./reports]
   codesentinel ownership [--repo <repo_name>]
+  codesentinel standup [--repo <repo_name>] [--days 1]
+  codesentinel pr-premortem --repo <repo_name> --repo-full-name <org/repo> --pr <number> [--files <comma_files>]
   codesentinel onboard
   codesentinel repos
 
@@ -445,6 +449,84 @@ async function cmdOwnership(rest, values) {
   }
 }
 
+async function cmdStandup(values) {
+  let repoName = values.repo;
+  const registered = await listRegisteredRepos();
+
+  if (!repoName && process.stdin.isTTY) {
+    intro("CodeSentinel Daily Impact Standup");
+    repoName = await select({
+      message: "Which repository would you like to summarize?",
+      options: registered.map((repo) => ({ value: repo, label: repo })),
+    });
+
+    if (isCancel(repoName)) {
+      cancel("Standup cancelled.");
+      process.exit(0);
+    }
+  }
+
+  if (!repoName) {
+    throw new Error("standup requires --repo or an interactive selection.");
+  }
+
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Mining git history and analyzing impact for ${repoName}...`);
+
+  const memory = await getRepoMemoryPaths(repoName);
+  const repoPath = memory.repoRoot.protocol === "file:" ? memory.repoRoot.pathname : process.cwd();
+
+  const report = await generateStandupReport({
+    repoName,
+    repoPath,
+    days: Number(values.days ?? 1),
+  });
+
+  if (s) s.stop("Impact analysis complete.");
+
+  if (!report) {
+    note("No commits found in the specified time period.", "Standup Summary");
+    return;
+  }
+
+  if (process.stdin.isTTY && !values.json) {
+    console.log(report.aiSummary);
+    outro("Standup complete.");
+  } else {
+    console.log(JSON.stringify(report, null, 2));
+  }
+}
+
+async function cmdPrPremortem(values) {
+  if (!values.repo || !values["repo-full-name"] || !values.pr) {
+    throw new Error("pr-premortem requires --repo, --repo-full-name and --pr");
+  }
+
+  const s = process.stdin.isTTY ? spinner() : null;
+  if (s) s.start(`Generating risk assessment for PR #${values.pr}...`);
+
+  const changedFiles = (values.files ?? "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  const premortem = await generatePremortem({
+    repoName: values.repo,
+    fullRepoName: values["repo-full-name"],
+    pullNumber: Number(values.pr),
+    changedFiles,
+  });
+
+  if (s) s.stop("Assessment complete.");
+
+  if (process.stdin.isTTY && !values.json) {
+    console.log(premortem.markdown);
+    outro("Pre-mortem ready.");
+  } else {
+    console.log(JSON.stringify(premortem, null, 2));
+  }
+}
+
 async function pathExists(filePath) {
   try {
     await access(filePath);
@@ -465,6 +547,48 @@ async function checkCommand(command, args = ["--version"]) {
 
 function requiredEnvStatus(names) {
   return names.map((name) => ({ name, present: Boolean(process.env[name]) }));
+}
+
+function getConfiguredLlmProvider() {
+  return (process.env.CODESENTINEL_LLM_PROVIDER ?? "").trim().toLowerCase();
+}
+
+function getLlmEnvChecks(provider) {
+  if (provider === "anthropic") {
+    return requiredEnvStatus(["ANTHROPIC_API_KEY"]);
+  }
+  if (provider === "openai") {
+    return requiredEnvStatus(["OPENAI_API_KEY"]);
+  }
+  if (provider === "google") {
+    return requiredEnvStatus(["GOOGLE_API_KEY"]);
+  }
+  if (provider === "openrouter") {
+    return requiredEnvStatus(["OPENROUTER_API_KEY"]);
+  }
+  if (provider === "qwen") {
+    return requiredEnvStatus(["QWEN_API_KEY"]);
+  }
+  return [];
+}
+
+function getOptionalLlmEnvForProvider(provider) {
+  if (provider === "anthropic") {
+    return ["ANTHROPIC_MODEL"];
+  }
+  if (provider === "openai") {
+    return ["OPENAI_MODEL"];
+  }
+  if (provider === "google") {
+    return ["GOOGLE_MODEL"];
+  }
+  if (provider === "qwen") {
+    return ["QWEN_MODEL", "QWEN_BASE_URL"];
+  }
+  if (provider === "openrouter") {
+    return ["OPENROUTER_MODEL"];
+  }
+  return [];
 }
 
 function parseEnvFile(raw) {
@@ -534,6 +658,17 @@ async function promptForEnv(missingEnv) {
   }
 
   const labels = {
+    ANTHROPIC_API_KEY: "Anthropic API Key",
+    ANTHROPIC_MODEL: "Anthropic model override (optional)",
+    OPENAI_API_KEY: "OpenAI API Key",
+    OPENAI_MODEL: "OpenAI model override (optional)",
+    OPENROUTER_API_KEY: "OpenRouter API Key",
+    OPENROUTER_MODEL: "OpenRouter model override (optional)",
+    QWEN_API_KEY: "Qwen API Key",
+    QWEN_MODEL: "Qwen model override (optional)",
+    QWEN_BASE_URL: "Qwen Base URL (optional)",
+    GOOGLE_API_KEY: "Google AI API Key",
+    GOOGLE_MODEL: "Google model override (optional)",
     SLACK_SIGNING_SECRET: "Slack Signing Secret",
     SLACK_BOT_TOKEN: "Slack Bot Token",
     SLACK_WEBHOOK_URL: "Slack Incoming Webhook URL",
@@ -571,6 +706,35 @@ async function promptForEnv(missingEnv) {
   }
 
   return { collected, skipped };
+}
+
+async function promptForLlmProvider() {
+  if (!process.stdin.isTTY) {
+    return { provider: null, skipped: true };
+  }
+
+  const selection = await select({
+    message: "Choose an LLM provider for CodeSentinel:",
+    options: [
+      { value: "anthropic", label: "Anthropic" },
+      { value: "openai", label: "OpenAI" },
+      { value: "google", label: "Google" },
+      { value: "openrouter", label: "OpenRouter" },
+      { value: "qwen", label: "Qwen" },
+      { value: "skip", label: "Skip (configure later)" },
+    ],
+  });
+
+  if (isCancel(selection)) {
+    cancel("Onboarding cancelled.");
+    process.exit(0);
+  }
+
+  if (selection === "skip") {
+    return { provider: null, skipped: true };
+  }
+
+  return { provider: selection, skipped: false };
 }
 
 async function cmdOnboard(values) {
@@ -628,6 +792,8 @@ async function cmdOnboard(values) {
     slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
     github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
     twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+    llmProvider: requiredEnvStatus(["CODESENTINEL_LLM_PROVIDER"]),
+    llm: getLlmEnvChecks(getConfiguredLlmProvider()),
   };
 
   const missingEnv = Object.values(envChecks)
@@ -640,23 +806,66 @@ async function cmdOnboard(values) {
     wroteEnvFile: false,
     collected: [],
     skipped: [],
+    llmProvider: getConfiguredLlmProvider() || null,
   };
 
-  if (missingEnv.length > 0 && !values["non-interactive"]) {
+  const collectedEntries = [];
+  const skippedKeys = [];
+
+  if (isInteractive && !getConfiguredLlmProvider()) {
     onboardingCapture.prompted = true;
-    const prompted = await promptForEnv(missingEnv);
-    onboardingCapture.collected = prompted.collected.map((entry) => entry.key);
-    onboardingCapture.skipped = prompted.skipped;
-    if (prompted.collected.length > 0) {
-      await upsertEnvValues(envFile, prompted.collected);
-      onboardingCapture.wroteEnvFile = true;
+    const selection = await promptForLlmProvider();
+    if (selection.provider) {
+      process.env.CODESENTINEL_LLM_PROVIDER = selection.provider;
+      collectedEntries.push({ key: "CODESENTINEL_LLM_PROVIDER", value: selection.provider });
+      onboardingCapture.llmProvider = selection.provider;
+    } else if (selection.skipped) {
+      skippedKeys.push("CODESENTINEL_LLM_PROVIDER");
     }
+  }
+
+  const currentMissingEnv = [
+    ...Object.values({
+      slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
+      github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
+      twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+      llm: getLlmEnvChecks(getConfiguredLlmProvider()),
+    })
+      .flat()
+      .filter((entry) => !entry.present)
+      .map((entry) => entry.name),
+  ];
+
+  if (currentMissingEnv.length > 0 && isInteractive) {
+    onboardingCapture.prompted = true;
+    const prompted = await promptForEnv(currentMissingEnv);
+    collectedEntries.push(...prompted.collected);
+    skippedKeys.push(...prompted.skipped);
+  }
+
+  const optionalLlmEnv = getOptionalLlmEnvForProvider(getConfiguredLlmProvider())
+    .filter((key) => !process.env[key]);
+  if (optionalLlmEnv.length > 0 && isInteractive) {
+    onboardingCapture.prompted = true;
+    note("Optional LLM settings: you can keep the defaults or customize them.");
+    const prompted = await promptForEnv(optionalLlmEnv);
+    collectedEntries.push(...prompted.collected);
+    skippedKeys.push(...prompted.skipped);
+  }
+
+  onboardingCapture.collected = [...new Set(collectedEntries.map((entry) => entry.key))];
+  onboardingCapture.skipped = [...new Set(skippedKeys)];
+  if (collectedEntries.length > 0) {
+    await upsertEnvValues(envFile, collectedEntries);
+    onboardingCapture.wroteEnvFile = true;
   }
 
   const refreshedEnvChecks = {
     slack: requiredEnvStatus(["SLACK_SIGNING_SECRET", "SLACK_BOT_TOKEN", "SLACK_WEBHOOK_URL", "SLACK_CHANNEL_ID"]),
     github: requiredEnvStatus(["GITHUB_TOKEN", "GITHUB_WEBHOOK_SECRET"]),
     twilio: requiredEnvStatus(["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"]),
+    llmProvider: requiredEnvStatus(["CODESENTINEL_LLM_PROVIDER"]),
+    llm: getLlmEnvChecks(getConfiguredLlmProvider()),
   };
 
   const remainingMissingEnv = Object.values(refreshedEnvChecks)
@@ -687,6 +896,9 @@ async function cmdOnboard(values) {
     } else {
       nextSteps.push("Fill remaining skipped/missing environment variables by rerunning `codesentinel onboard`.");
     }
+  }
+  if (!getConfiguredLlmProvider()) {
+    nextSteps.push("Choose an LLM provider by rerunning `codesentinel onboard` or setting `CODESENTINEL_LLM_PROVIDER` manually.");
   }
   if (ok) {
     nextSteps.push("Run `npm run server:start` and `npm run webhooks:start` in separate terminals.");
@@ -728,6 +940,10 @@ async function main() {
     allowPositionals: true,
     options: {
       repo: { type: "string" },
+      "repo-full-name": { type: "string" },
+      pr: { type: "string" },
+      files: { type: "string" },
+      days: { type: "string", default: "1" },
       "in-repo": { type: "boolean", default: false },
       output: { type: "string", default: "reports" },
       notify: { type: "boolean", default: false },
@@ -772,6 +988,16 @@ async function main() {
 
   if (command === "ownership") {
     await cmdOwnership(rest, values);
+    return;
+  }
+
+  if (command === "standup") {
+    await cmdStandup(values);
+    return;
+  }
+
+  if (command === "pr-premortem") {
+    await cmdPrPremortem(values);
     return;
   }
 

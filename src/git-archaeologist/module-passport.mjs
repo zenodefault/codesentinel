@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import Anthropic from "@anthropic-ai/sdk";
+import { promptLlm } from "../llm/client.mjs";
 import { readRepoMemory, writeModulePassport, toPath } from "../memory/memory.mjs";
 
 function parseExternalImports(filePath, source) {
@@ -51,40 +51,22 @@ function fallbackSummary(passport) {
 }
 
 async function generateRiskSummary(passport) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return {
-      summary: fallbackSummary(passport),
-      warning: "ANTHROPIC_API_KEY is not configured; using deterministic fallback summary.",
-    };
-  }
-
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const prompt = `Summarize this module risk in plain English for engineers. Focus on why it matters and what to review first.\n\n${JSON.stringify(
+    passport,
+    null,
+    2,
+  )}`;
 
   try {
-    const response = await client.messages.create({
-      model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
-      max_tokens: 300,
-      messages: [
-        {
-          role: "user",
-          content: `Summarize this module risk in plain English for engineers. Focus on why it matters and what to review first.\n\n${JSON.stringify(
-            passport,
-            null,
-            2,
-          )}`,
-        },
-      ],
-    });
-
-    const textBlock = response.content.find((block) => block.type === "text");
+    const text = await promptLlm(prompt, { max_tokens: 300 });
     return {
-      summary: textBlock?.text?.trim() ?? fallbackSummary(passport),
+      summary: text || fallbackSummary(passport),
       warning: null,
     };
   } catch (error) {
     return {
       summary: fallbackSummary(passport),
-      warning: `Claude summary generation failed: ${error.message}`,
+      warning: `LLM summary generation failed: ${error.message}`,
     };
   }
 }

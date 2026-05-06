@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import Anthropic from "@anthropic-ai/sdk";
+import { promptLlm } from "../llm/client.mjs";
 import { readMemoryJson, getRepoMemoryPaths } from "../memory/memory.mjs";
 import {
   createIssueComment,
@@ -54,16 +54,6 @@ function cvesForFile(filePath, dependencyLedger) {
 }
 
 async function generateWhatCouldGoWrong({ repoName, pullNumber, files, ghostOwned, cves }) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    const risky = files.filter((entry) => entry.riskLevel === "CRITICAL" || entry.riskLevel === "HIGH");
-    if (risky.length === 0) {
-      return "Low immediate regression risk; focus on test coverage for changed modules and dependency checks.";
-    }
-    return `Potential failures cluster around ${risky.map((entry) => entry.file).join(", ")} due to high coupling, known CVEs, and ownership gaps.`;
-  }
-
-  const client = new Anthropic({ apiKey });
   const prompt = [
     `Repository: ${repoName}`,
     `PR: #${pullNumber}`,
@@ -74,15 +64,16 @@ async function generateWhatCouldGoWrong({ repoName, pullNumber, files, ghostOwne
     `CVEs in scope: ${JSON.stringify(cves)}`,
   ].join("\n");
 
-  const response = await client.messages.create({
-    model: process.env.CLAUDE_MODEL ?? "claude-sonnet-4-20250514",
-    max_tokens: 220,
-    temperature: 0.2,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const text = response.content.find((entry) => entry.type === "text")?.text?.trim();
-  return text || "Potential risk is concentrated in high blast-radius and vulnerable dependencies; reinforce tests and staged rollout.";
+  try {
+    const text = await promptLlm(prompt, { max_tokens: 220, temperature: 0.2 });
+    return text || "Potential risk is concentrated in high blast-radius and vulnerable dependencies; reinforce tests and staged rollout.";
+  } catch (error) {
+    const risky = files.filter((entry) => entry.riskLevel === "CRITICAL" || entry.riskLevel === "HIGH");
+    if (risky.length === 0) {
+      return "Low immediate regression risk; focus on test coverage for changed modules and dependency checks.";
+    }
+    return `Potential failures cluster around ${risky.map((entry) => entry.file).join(", ")} due to high coupling, known CVEs, and ownership gaps.`;
+  }
 }
 
 export async function generatePremortem({ repoName, fullRepoName, pullNumber, changedFiles }) {
