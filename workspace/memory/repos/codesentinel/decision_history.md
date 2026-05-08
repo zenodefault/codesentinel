@@ -5,7 +5,7 @@ Git and ticket-derived decision context for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-04T14:10:34.385Z",
+  "updatedAt": "2026-05-08T18:01:58.367Z",
   "decisions": [
     {
       "filePath": "README.md",
@@ -253,6 +253,130 @@ Git and ticket-derived decision context for codesentinel.
             "commitCount": 1,
             "lastAuthoredAt": "2026-05-03T00:13:27+05:30",
             "email": "gwenstacysp14@gmail.com"
+          }
+        ],
+        "ownershipSignals": {
+          "codeownersOwners": 0,
+          "historicalAuthors": 1
+        }
+      },
+      "warnings": [
+        "Jira credentials are not configured; ticket enrichment was skipped.",
+        "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."
+      ]
+    },
+    {
+      "filePath": "scripts/lint-workspace.mjs",
+      "commitCount": 1,
+      "commits": [
+        {
+          "commitHash": "d082b37e23948199fbba2befb23b14091047f804",
+          "subject": "Task 1: initialize OpenClaw project",
+          "authorName": "zenodefault",
+          "authorEmail": "zenobot99@gmail.com",
+          "authoredAt": "2026-05-02T23:35:51+05:30",
+          "ticketIds": []
+        }
+      ],
+      "jiraIssues": [],
+      "ghostAuthors": [
+        {
+          "repo": "codesentinel",
+          "filePath": "scripts/lint-workspace.mjs",
+          "email": "zenobot99@gmail.com",
+          "loginHint": "zenobot99",
+          "lastCommitDate": "2026-05-02T23:35:51+05:30",
+          "commitCount": 1,
+          "files": [
+            "scripts/lint-workspace.mjs"
+          ],
+          "matchingStrategy": "git-email-local-part-vs-github-login"
+        }
+      ],
+      "ghostOwnershipRisk": "HIGH",
+      "ownership": {
+        "filePath": "scripts/lint-workspace.mjs",
+        "coverage": "inferred",
+        "codeowners": null,
+        "likelyTeam": null,
+        "primaryOwner": {
+          "label": "zenodefault <zenobot99@gmail.com>",
+          "type": "historical-author",
+          "source": "git-history",
+          "confidence": "low"
+        },
+        "suggestedContacts": [
+          {
+            "label": "zenodefault <zenobot99@gmail.com>",
+            "type": "historical-author",
+            "source": "git-history",
+            "confidence": "low",
+            "reason": "1 commit(s) on scripts/lint-workspace.mjs, last touched 2026-05-02T23:35:51+05:30.",
+            "commitCount": 1,
+            "lastAuthoredAt": "2026-05-02T23:35:51+05:30",
+            "email": "zenobot99@gmail.com"
+          }
+        ],
+        "ownershipSignals": {
+          "codeownersOwners": 0,
+          "historicalAuthors": 1
+        }
+      },
+      "warnings": [
+        "Jira credentials are not configured; ticket enrichment was skipped.",
+        "GitHub org lookup skipped because org or GITHUB_TOKEN is missing."
+      ]
+    },
+    {
+      "filePath": "src/server/run-server.mjs",
+      "commitCount": 1,
+      "commits": [
+        {
+          "commitHash": "1b68b584acd2bae73104f675c4c9e3b49dd734f5",
+          "subject": "Build Dev 3 Slack, rot-report, and dashboard foundation",
+          "authorName": "Hemanth Kumar VJ",
+          "authorEmail": "chanducharan8183@gmail.com",
+          "authoredAt": "2026-05-03T01:25:59+05:30",
+          "ticketIds": []
+        }
+      ],
+      "jiraIssues": [],
+      "ghostAuthors": [
+        {
+          "repo": "codesentinel",
+          "filePath": "src/server/run-server.mjs",
+          "email": "chanducharan8183@gmail.com",
+          "loginHint": "chanducharan8183",
+          "lastCommitDate": "2026-05-03T01:25:59+05:30",
+          "commitCount": 1,
+          "files": [
+            "src/server/run-server.mjs"
+          ],
+          "matchingStrategy": "git-email-local-part-vs-github-login"
+        }
+      ],
+      "ghostOwnershipRisk": "HIGH",
+      "ownership": {
+        "filePath": "src/server/run-server.mjs",
+        "coverage": "inferred",
+        "codeowners": null,
+        "likelyTeam": null,
+        "primaryOwner": {
+          "label": "Hemanth Kumar VJ <chanducharan8183@gmail.com>",
+          "type": "historical-author",
+          "source": "git-history",
+          "confidence": "low"
+        },
+        "suggestedContacts": [
+          {
+            "label": "Hemanth Kumar VJ <chanducharan8183@gmail.com>",
+            "type": "historical-author",
+            "source": "git-history",
+            "confidence": "low",
+            "reason": "1 commit(s) on src/server/run-server.mjs, last touched 2026-05-03T01:25:59+05:30.",
+            "commitCount": 1,
+            "lastAuthoredAt": "2026-05-03T01:25:59+05:30",
+            "email": "chanducharan8183@gmail.com"
           }
         ],
         "ownershipSignals": {

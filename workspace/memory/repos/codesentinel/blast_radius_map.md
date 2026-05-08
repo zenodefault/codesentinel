@@ -5,8 +5,13 @@ Reverse dependency map for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-04T14:10:34.386Z",
+  "updatedAt": "2026-05-08T18:01:58.367Z",
   "files": {
+    "demo-trigger.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
+    },
     "scripts/lint-workspace.mjs": {
       "directDependents": [],
       "impactedFiles": [],
@@ -20,48 +25,6 @@ Reverse dependency map for codesentinel.
         "src/git-archaeologist/run-git-archaeologist.mjs"
       ],
       "blastRadiusCount": 1
-    },
-    "src/cli/codesentinel.mjs": {
-      "directDependents": [],
-      "impactedFiles": [],
-      "blastRadiusCount": 0
-    },
-    "src/auto-fix/docker-sim.mjs": {
-      "directDependents": [
-        "src/auto-fix/run-auto-fix.mjs"
-      ],
-      "impactedFiles": [
-        "src/auto-fix/run-auto-fix.mjs"
-      ],
-      "blastRadiusCount": 1
-    },
-    "src/auto-fix/e2e-autofix-test.mjs": {
-      "directDependents": [],
-      "impactedFiles": [],
-      "blastRadiusCount": 0
-    },
-    "src/auto-fix/license-check.mjs": {
-      "directDependents": [
-        "src/auto-fix/run-auto-fix.mjs"
-      ],
-      "impactedFiles": [
-        "src/auto-fix/run-auto-fix.mjs"
-      ],
-      "blastRadiusCount": 1
-    },
-    "src/auto-fix/manifest.mjs": {
-      "directDependents": [
-        "src/auto-fix/run-auto-fix.mjs"
-      ],
-      "impactedFiles": [
-        "src/auto-fix/run-auto-fix.mjs"
-      ],
-      "blastRadiusCount": 1
-    },
-    "src/auto-fix/run-auto-fix.mjs": {
-      "directDependents": [],
-      "impactedFiles": [],
-      "blastRadiusCount": 0
     },
     "src/cve-sweep/advisories.mjs": {
       "directDependents": [
@@ -133,6 +96,48 @@ Reverse dependency map for codesentinel.
       ],
       "blastRadiusCount": 1
     },
+    "src/cli/codesentinel.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
+    },
+    "src/auto-fix/docker-sim.mjs": {
+      "directDependents": [
+        "src/auto-fix/run-auto-fix.mjs"
+      ],
+      "impactedFiles": [
+        "src/auto-fix/run-auto-fix.mjs"
+      ],
+      "blastRadiusCount": 1
+    },
+    "src/auto-fix/e2e-autofix-test.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
+    },
+    "src/auto-fix/license-check.mjs": {
+      "directDependents": [
+        "src/auto-fix/run-auto-fix.mjs"
+      ],
+      "impactedFiles": [
+        "src/auto-fix/run-auto-fix.mjs"
+      ],
+      "blastRadiusCount": 1
+    },
+    "src/auto-fix/manifest.mjs": {
+      "directDependents": [
+        "src/auto-fix/run-auto-fix.mjs"
+      ],
+      "impactedFiles": [
+        "src/auto-fix/run-auto-fix.mjs"
+      ],
+      "blastRadiusCount": 1
+    },
+    "src/auto-fix/run-auto-fix.mjs": {
+      "directDependents": [],
+      "impactedFiles": [],
+      "blastRadiusCount": 0
+    },
     "src/git-archaeologist/ghost-authors.mjs": {
       "directDependents": [
         "src/git-archaeologist/run-git-archaeologist.mjs"
@@ -199,6 +204,22 @@ Reverse dependency map for codesentinel.
       "impactedFiles": [],
       "blastRadiusCount": 0
     },
+    "src/llm/client.mjs": {
+      "directDependents": [
+        "src/git-archaeologist/module-passport.mjs",
+        "src/orchestrator/standup.mjs",
+        "src/pr-premortem/run-pr-premortem.mjs"
+      ],
+      "impactedFiles": [
+        "src/cli/codesentinel.mjs",
+        "src/git-archaeologist/module-passport.mjs",
+        "src/git-archaeologist/run-git-archaeologist.mjs",
+        "src/orchestrator/standup.mjs",
+        "src/pr-premortem/run-pr-premortem.mjs",
+        "src/server/webhooks.mjs"
+      ],
+      "blastRadiusCount": 6
+    },
     "src/integrations/github.mjs": {
       "directDependents": [
         "src/auto-fix/run-auto-fix.mjs",
@@ -207,10 +228,11 @@ Reverse dependency map for codesentinel.
       ],
       "impactedFiles": [
         "src/auto-fix/run-auto-fix.mjs",
+        "src/cli/codesentinel.mjs",
         "src/pr-premortem/run-pr-premortem.mjs",
         "src/server/webhooks.mjs"
       ],
-      "blastRadiusCount": 3
+      "blastRadiusCount": 4
     },
     "src/integrations/slack-notify.mjs": {
       "directDependents": [
@@ -242,12 +264,14 @@ Reverse dependency map for codesentinel.
     },
     "src/integrations/whatsapp-twilio.mjs": {
       "directDependents": [
+        "demo-trigger.mjs",
         "src/auto-fix/run-auto-fix.mjs"
       ],
       "impactedFiles": [
+        "demo-trigger.mjs",
         "src/auto-fix/run-auto-fix.mjs"
       ],
-      "blastRadiusCount": 1
+      "blastRadiusCount": 2
     },
     "src/memory/check-memory.mjs": {
       "directDependents": [],
@@ -268,8 +292,10 @@ Reverse dependency map for codesentinel.
         "src/git-archaeologist/run-git-archaeologist.mjs",
         "src/memory/check-memory.mjs",
         "src/memory/memory.mjs",
+        "src/orchestrator/onboarding-buddy.mjs",
         "src/orchestrator/route-command.mjs",
         "src/orchestrator/run-heartbeat-trigger.mjs",
+        "src/orchestrator/standup.mjs",
         "src/pr-premortem/run-pr-premortem.mjs",
         "src/reports/run-weekly-report.mjs",
         "src/rot-report/aggregate.mjs",
@@ -279,7 +305,7 @@ Reverse dependency map for codesentinel.
         "src/server/run-server.mjs",
         "src/server/webhooks.mjs"
       ],
-      "blastRadiusCount": 17
+      "blastRadiusCount": 19
     },
     "src/memory/memory.mjs": {
       "directDependents": [
@@ -289,7 +315,9 @@ Reverse dependency map for codesentinel.
         "src/git-archaeologist/module-passport.mjs",
         "src/git-archaeologist/run-git-archaeologist.mjs",
         "src/memory/check-memory.mjs",
+        "src/orchestrator/onboarding-buddy.mjs",
         "src/orchestrator/run-heartbeat-trigger.mjs",
+        "src/orchestrator/standup.mjs",
         "src/pr-premortem/run-pr-premortem.mjs",
         "src/rot-report/aggregate.mjs",
         "src/server/command-handlers.mjs",
@@ -303,8 +331,10 @@ Reverse dependency map for codesentinel.
         "src/git-archaeologist/module-passport.mjs",
         "src/git-archaeologist/run-git-archaeologist.mjs",
         "src/memory/check-memory.mjs",
+        "src/orchestrator/onboarding-buddy.mjs",
         "src/orchestrator/route-command.mjs",
         "src/orchestrator/run-heartbeat-trigger.mjs",
+        "src/orchestrator/standup.mjs",
         "src/pr-premortem/run-pr-premortem.mjs",
         "src/reports/run-weekly-report.mjs",
         "src/rot-report/aggregate.mjs",
@@ -314,24 +344,14 @@ Reverse dependency map for codesentinel.
         "src/server/run-server.mjs",
         "src/server/webhooks.mjs"
       ],
-      "blastRadiusCount": 16
+      "blastRadiusCount": 18
     },
-    "src/pr-premortem/card.mjs": {
+    "src/orchestrator/onboarding-buddy.mjs": {
       "directDependents": [
-        "src/pr-premortem/run-pr-premortem.mjs"
+        "src/cli/codesentinel.mjs"
       ],
       "impactedFiles": [
-        "src/pr-premortem/run-pr-premortem.mjs",
-        "src/server/webhooks.mjs"
-      ],
-      "blastRadiusCount": 2
-    },
-    "src/pr-premortem/run-pr-premortem.mjs": {
-      "directDependents": [
-        "src/server/webhooks.mjs"
-      ],
-      "impactedFiles": [
-        "src/server/webhooks.mjs"
+        "src/cli/codesentinel.mjs"
       ],
       "blastRadiusCount": 1
     },
@@ -344,6 +364,37 @@ Reverse dependency map for codesentinel.
       "directDependents": [],
       "impactedFiles": [],
       "blastRadiusCount": 0
+    },
+    "src/orchestrator/standup.mjs": {
+      "directDependents": [
+        "src/cli/codesentinel.mjs"
+      ],
+      "impactedFiles": [
+        "src/cli/codesentinel.mjs"
+      ],
+      "blastRadiusCount": 1
+    },
+    "src/pr-premortem/card.mjs": {
+      "directDependents": [
+        "src/pr-premortem/run-pr-premortem.mjs"
+      ],
+      "impactedFiles": [
+        "src/cli/codesentinel.mjs",
+        "src/pr-premortem/run-pr-premortem.mjs",
+        "src/server/webhooks.mjs"
+      ],
+      "blastRadiusCount": 3
+    },
+    "src/pr-premortem/run-pr-premortem.mjs": {
+      "directDependents": [
+        "src/cli/codesentinel.mjs",
+        "src/server/webhooks.mjs"
+      ],
+      "impactedFiles": [
+        "src/cli/codesentinel.mjs",
+        "src/server/webhooks.mjs"
+      ],
+      "blastRadiusCount": 2
     },
     "src/reports/docx_builder.py": {
       "directDependents": [],

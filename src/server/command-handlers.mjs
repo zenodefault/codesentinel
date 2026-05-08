@@ -2,12 +2,131 @@ import { execFile } from "node:child_process";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { ensureMemoryStructure, listRegisteredRepos } from "../memory/memory.mjs";
-import { buildRegisterProgressBlocks, buildRegisterSummaryBlocks, buildScanBlocks, buildSimpleErrorBlocks, buildWhyBlocks } from "../slack/blocks.mjs";
+import { ensureMemoryStructure, listRegisteredRepos, readModulePassports } from "../memory/memory.mjs";
+import { 
+  buildRegisterProgressBlocks, 
+  buildRegisterSummaryBlocks, 
+  buildScanBlocks, 
+  buildSimpleErrorBlocks, 
+  buildWhyBlocks,
+  buildReposBlocks,
+  buildRotReportBlocks,
+  buildStandupBlocks,
+  buildOwnershipBlocks,
+  buildOnboardBlocks
+} from "../slack/blocks.mjs";
 import { readMemoryJson } from "../memory/memory.mjs";
 import { MEMORY_ROOT, getRepoMemoryPaths } from "../memory/memory.mjs";
 
 const execFileAsync = promisify(execFile);
+
+async function handleRepos() {
+  const repos = await listRegisteredRepos();
+  return {
+    statusCode: 200,
+    body: {
+      response_type: "in_channel",
+      text: "List of registered repositories",
+      blocks: buildReposBlocks(repos),
+    },
+  };
+}
+
+async function handleReport() {
+  const result = await runJsonCommand(["./src/reports/run-weekly-report.mjs", "--output", "reports"]);
+  return {
+    statusCode: 200,
+    body: {
+      response_type: "in_channel",
+      text: "Weekly Code Rot Report",
+      blocks: buildRotReportBlocks(result.report),
+    },
+  };
+}
+
+async function handleStandup(text) {
+  const [repoName, days = "1"] = text.trim().split(/\s+/);
+  if (!repoName) {
+    return {
+      statusCode: 200,
+      body: {
+        response_type: "ephemeral",
+        text: "Usage: /standup {repo_name} [days]",
+        blocks: buildSimpleErrorBlocks("Standup needs a repo", "Use `/standup {repo_name} [days]` to summarize recent impact."),
+      },
+    };
+  }
+
+  const result = await runJsonCommand(["./src/cli/codesentinel.mjs", "standup", "--repo", repoName, "--days", days, "--json"]);
+  return {
+    statusCode: 200,
+    body: {
+      response_type: "in_channel",
+      text: `Daily Impact for ${repoName}`,
+      blocks: buildStandupBlocks(repoName, result),
+    },
+  };
+}
+
+async function handleOwnership(text) {
+  const repoName = text.trim();
+  const registered = await listRegisteredRepos();
+  let repos = repoName ? [repoName] : registered;
+
+  const unclearModules = [];
+  for (const repo of repos) {
+    const passports = await readModulePassports(repo);
+    for (const passport of passports) {
+      const isUnmapped = !passport.ownership?.primaryOwner?.label || passport.ownership.primaryOwner.label === "Unmapped";
+      const isUnassigned = !passport.ownership?.likelyTeam?.name || passport.ownership.likelyTeam.name === "Unassigned";
+      const hasGhostAuthors = (passport.ghostAuthors?.length ?? 0) > 0;
+
+      if (isUnmapped || isUnassigned || hasGhostAuthors) {
+        unclearModules.push({
+          repo,
+          module: passport.module,
+          owner: passport.ownership?.primaryOwner?.label ?? "Unmapped",
+          team: passport.ownership?.likelyTeam?.name ?? "Unassigned",
+        });
+      }
+    }
+  }
+
+  return {
+    statusCode: 200,
+    body: {
+      response_type: "in_channel",
+      text: "Ownership Audit Results",
+      blocks: buildOwnershipBlocks(unclearModules),
+    },
+  };
+}
+
+async function handleOnboard(text) {
+  const [repo, author, ...fileParts] = text.trim().split(/\s+/);
+  const files = fileParts.join(",");
+
+  if (!repo || !author || !files) {
+    return {
+      statusCode: 200,
+      body: {
+        response_type: "ephemeral",
+        text: "Usage: /onboard {repo} {author} {files}",
+        blocks: buildSimpleErrorBlocks("Onboard needs arguments", "Use `/onboard {repo} {author} {file1,file2}` to help someone get started."),
+      },
+    };
+  }
+
+  const result = await runJsonCommand(["./src/cli/codesentinel.mjs", "onboard-buddy", "--repo", repo, "--author", author, "--files", files, "--json"]);
+  return {
+    statusCode: 200,
+    body: {
+      response_type: "in_channel",
+      text: `Onboarding Context for ${author}`,
+      blocks: buildOnboardBlocks(result.contexts, result.message),
+    },
+  };
+}
 
 function parseRepoName(repoInput) {
   const trimmed = repoInput.trim().replace(/\/+$/, "");
@@ -212,6 +331,26 @@ export async function routeSlackCommand(command, text) {
 
   if (command === "/why") {
     return handleWhy(text);
+  }
+
+  if (command === "/report") {
+    return handleReport();
+  }
+
+  if (command === "/repos") {
+    return handleRepos();
+  }
+
+  if (command === "/standup") {
+    return handleStandup(text);
+  }
+
+  if (command === "/ownership") {
+    return handleOwnership(text);
+  }
+
+  if (command === "/onboard") {
+    return handleOnboard(text);
   }
 
   return {

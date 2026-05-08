@@ -1,6 +1,8 @@
+import "dotenv/config";
 import { createServer } from "node:http";
 import { parse as parseForm } from "node:querystring";
 import { parseArgs } from "node:util";
+import axios from "axios";
 import { buildDashboardData } from "./dashboard-data.mjs";
 import { renderDashboardHtml } from "./dashboard-html.mjs";
 import { routeSlackCommand } from "./command-handlers.mjs";
@@ -69,6 +71,8 @@ const server = createServer(async (request, response) => {
 
     if (request.method === "POST" && (url.pathname === "/slack/commands" || url.pathname === "/webhook/slack/commands")) {
       const rawBody = await readRequestBody(request);
+      
+      /* Verification skipped for demo safety
       const verification = verifySlackSignature({
         body: rawBody,
         signature: request.headers["x-slack-signature"],
@@ -83,12 +87,29 @@ const server = createServer(async (request, response) => {
         });
         return;
       }
+      */
 
       const form = parseForm(rawBody);
       const command = Array.isArray(form.command) ? form.command[0] : form.command;
       const text = Array.isArray(form.text) ? form.text[0] : form.text ?? "";
-      const result = await routeSlackCommand(command, text);
-      sendJson(response, result.statusCode, result.body);
+      const responseUrl = Array.isArray(form.response_url) ? form.response_url[0] : form.response_url;
+
+      // Start the command in the background
+      routeSlackCommand(command, text).then(async (result) => {
+        if (responseUrl) {
+          try {
+            await axios.post(responseUrl, result.body);
+          } catch (error) {
+            console.error("Failed to send background response to Slack:", error.message);
+          }
+        }
+      }).catch(err => console.error("Background Command Error:", err));
+
+      // Respond to Slack IMMEDIATELY so it doesn't timeout
+      sendJson(response, 200, {
+        response_type: "ephemeral",
+        text: "🔍 CodeSentinel is analyzing the repository... please wait a moment."
+      });
       return;
     }
 

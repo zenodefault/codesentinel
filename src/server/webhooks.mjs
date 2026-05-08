@@ -1,3 +1,4 @@
+import "dotenv/config";
 import crypto from "node:crypto";
 import http from "node:http";
 import { listPullRequestFiles, parseRepoFullName, updatePullRequest } from "../integrations/github.mjs";
@@ -168,11 +169,14 @@ export function startWebhookServer(port = Number(process.env.PORT ?? 8787)) {
     }
   });
 
-  server.listen(port);
+  server.listen(port, () => {
+    const addr = server.address();
+    const actualPort = typeof addr === "string" ? addr : addr?.port;
+    console.log(JSON.stringify({ status: "listening", port: actualPort }, null, 2));
+  });
   return server;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const server = startWebhookServer();
-  console.log(JSON.stringify({ status: "listening", port: server.address().port }, null, 2));
+  startWebhookServer();
 }

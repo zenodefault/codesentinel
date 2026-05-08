@@ -344,3 +344,89 @@ export function buildCriticalDependencyBlocks(repoName, dependency) {
     buildFooterBlock(),
   ];
 }
+
+export function buildReposBlocks(repos) {
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "Registered Repositories",
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: repos.length ? repos.map(r => `• *${r}*`).join("\n") : "No repositories registered yet.",
+      },
+    },
+    buildFooterBlock(),
+  ];
+}
+
+export function buildStandupBlocks(repoName, report) {
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `Daily Impact: ${repoName}`,
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: report.aiSummary || "No commits found in the specified period.",
+      },
+    },
+    buildFooterBlock(),
+  ];
+}
+
+export function buildOwnershipBlocks(unclearModules) {
+  const list = unclearModules.slice(0, 10).map((m) => `• *${m.repo}*: ${m.module} (Owner: ${m.owner})`).join("\n");
+  const overflow = unclearModules.length > 10 ? `\n_...and ${unclearModules.length - 10} more._` : "";
+
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "Ownership Audit Results",
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: unclearModules.length > 0 
+          ? `Found *${unclearModules.length}* modules with unclear ownership:\n\n${list}${overflow}`
+          : "No modules with unclear ownership found. Great job!",
+      },
+    },
+    buildFooterBlock(),
+  ];
+}
+
+export function buildOnboardBlocks(contexts, message) {
+  return [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: "Onboarding Buddy Context",
+      },
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: message || "No onboarding context identified.",
+      },
+    },
+    buildFooterBlock(),
+  ];
+}
+

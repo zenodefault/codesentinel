@@ -5,13 +5,18 @@ Tracked dependency risk data for codesentinel.
 ```json
 {
   "repo": "codesentinel",
-  "updatedAt": "2026-05-02T18:22:56.181Z",
+  "updatedAt": "2026-05-08T17:21:57.235Z",
+  "source": {
+    "input": "https://github.com/zenodefault/codesentinel",
+    "sourceType": "git-url",
+    "resolvedRepoPath": "/tmp/codesentinel-cve-0F2DLU"
+  },
   "manifest": {
     "ecosystem": "npm",
-    "path": "/home/zenodefault/code/codesentinel/package.json"
+    "path": "/tmp/codesentinel-cve-0F2DLU/package.json"
   },
   "scanScope": "all",
-  "maxDependencies": 5,
+  "maxDependencies": 25,
   "directDependencyCount": 11,
   "graph": {
     "nodes": [
@@ -3712,7 +3717,7 @@ Tracked dependency risk data for codesentinel.
       "advisories": [],
       "warnings": [
         "NVD query for @agentclientprotocol/sdk was rate-limited or failed after retries: Request failed with status code 404",
-        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+        "GitHub advisory lookup for @agentclientprotocol/sdk failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
       ],
       "cvssBaseScore": 0,
       "blastRadius": {
@@ -3722,7 +3727,7 @@ Tracked dependency risk data for codesentinel.
       },
       "maintenance": {
         "lastMaintainedAt": "2026-04-28T08:54:27.212Z",
-        "daysSinceMaintained": 4,
+        "daysSinceMaintained": 10,
         "normalized": 0.1,
         "warning": null
       },
@@ -3736,18 +3741,18 @@ Tracked dependency risk data for codesentinel.
       "advisories": [],
       "warnings": [
         "NVD query for @anthropic-ai/sdk was rate-limited or failed after retries: Request failed with status code 404",
-        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+        "GitHub advisory lookup for @anthropic-ai/sdk failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
       ],
       "cvssBaseScore": 0,
       "blastRadius": {
         "importCount": 1,
         "files": [
-          "src/git-archaeologist/module-passport.mjs"
+          "src/llm/client.mjs"
         ],
         "normalized": 1
       },
       "maintenance": {
-        "lastMaintainedAt": "2026-04-30T19:42:47.218Z",
+        "lastMaintainedAt": "2026-05-07T15:12:00.251Z",
         "daysSinceMaintained": 1,
         "normalized": 0.1,
         "warning": null
@@ -3762,7 +3767,7 @@ Tracked dependency risk data for codesentinel.
       "advisories": [],
       "warnings": [
         "NVD query for @aws-crypto/crc32 was rate-limited or failed after retries: Request failed with status code 404",
-        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+        "GitHub advisory lookup for @aws-crypto/crc32 failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
       ],
       "cvssBaseScore": 0,
       "blastRadius": {
@@ -3772,8 +3777,8 @@ Tracked dependency risk data for codesentinel.
       },
       "maintenance": {
         "lastMaintainedAt": "2025-05-22T20:13:30.673Z",
-        "daysSinceMaintained": 344,
-        "normalized": 0.9425,
+        "daysSinceMaintained": 350,
+        "normalized": 0.9589,
         "warning": null
       },
       "actualRisk": 0,
@@ -3785,8 +3790,8 @@ Tracked dependency risk data for codesentinel.
       "direct": false,
       "advisories": [],
       "warnings": [
-        "NVD query for @aws-crypto/sha256-browser was rate-limited or failed after retries: Request failed with status code 404",
-        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+        "NVD query for @aws-crypto/sha256-browser was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-crypto/sha256-browser failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
       ],
       "cvssBaseScore": 0,
       "blastRadius": {
@@ -3796,8 +3801,8 @@ Tracked dependency risk data for codesentinel.
       },
       "maintenance": {
         "lastMaintainedAt": "2025-05-22T20:13:58.287Z",
-        "daysSinceMaintained": 344,
-        "normalized": 0.9425,
+        "daysSinceMaintained": 350,
+        "normalized": 0.9589,
         "warning": null
       },
       "actualRisk": 0,
@@ -3809,8 +3814,8 @@ Tracked dependency risk data for codesentinel.
       "direct": false,
       "advisories": [],
       "warnings": [
-        "NVD query for @aws-crypto/sha256-js was rate-limited or failed after retries: Request failed with status code 404",
-        "GITHUB_TOKEN is not configured; GitHub Advisory Database results were skipped."
+        "NVD query for @aws-crypto/sha256-js was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-crypto/sha256-js failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
       ],
       "cvssBaseScore": 0,
       "blastRadius": {
@@ -3820,8 +3825,488 @@ Tracked dependency risk data for codesentinel.
       },
       "maintenance": {
         "lastMaintainedAt": "2025-05-22T20:13:43.380Z",
-        "daysSinceMaintained": 344,
-        "normalized": 0.9425,
+        "daysSinceMaintained": 350,
+        "normalized": 0.9589,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-crypto/supports-web-crypto",
+      "versionRange": "5.2.0",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-crypto/supports-web-crypto was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-crypto/supports-web-crypto failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:13:05.872Z",
+        "daysSinceMaintained": 350,
+        "normalized": 0.9589,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-crypto/util",
+      "versionRange": "5.2.0",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-crypto/util was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-crypto/util failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2025-05-22T20:14:00.415Z",
+        "daysSinceMaintained": 350,
+        "normalized": 0.9589,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/client-bedrock-runtime",
+      "versionRange": "3.1041.0",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/client-bedrock-runtime was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/client-bedrock-runtime failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-07T19:27:11.519Z",
+        "daysSinceMaintained": 0,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/core",
+      "versionRange": "3.974.8",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/core was rate-limited or failed after retries: Request failed with status code 404",
+        "GitHub advisory lookup for @aws-sdk/core failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:11.143Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-env",
+      "versionRange": "3.972.34",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-env was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-env failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:10.194Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-http",
+      "versionRange": "3.972.36",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-http was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-http failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:17.459Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-ini",
+      "versionRange": "3.972.38",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-ini was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-ini failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:18.142Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-login",
+      "versionRange": "3.972.38",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-login was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-login failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:17.289Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-node",
+      "versionRange": "3.972.39",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-node was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-node failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:17.848Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-process",
+      "versionRange": "3.972.34",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-process was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-process failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:17.734Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-sso",
+      "versionRange": "3.972.38",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-sso was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-sso failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:17.854Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-web-identity",
+      "versionRange": "3.972.38",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/credential-provider-web-identity was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/credential-provider-web-identity failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:17.738Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/eventstream-handler-node",
+      "versionRange": "3.972.14",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/eventstream-handler-node was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/eventstream-handler-node failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-16T19:26:23.939Z",
+        "daysSinceMaintained": 21,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-eventstream",
+      "versionRange": "3.972.10",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-eventstream was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/middleware-eventstream failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-16T19:26:31.104Z",
+        "daysSinceMaintained": 21,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-host-header",
+      "versionRange": "3.972.10",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-host-header was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/middleware-host-header failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-16T19:26:03.166Z",
+        "daysSinceMaintained": 21,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-logger",
+      "versionRange": "3.972.10",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-logger was rate-limited or failed after retries: Request failed with status code 404",
+        "GitHub advisory lookup for @aws-sdk/middleware-logger failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-16T19:26:09.662Z",
+        "daysSinceMaintained": 21,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-recursion-detection",
+      "versionRange": "3.972.11",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-recursion-detection was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/middleware-recursion-detection failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-16T19:26:09.307Z",
+        "daysSinceMaintained": 21,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-sdk-s3",
+      "versionRange": "3.972.37",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-sdk-s3 was rate-limited or failed after retries: Request failed with status code 404",
+        "GitHub advisory lookup for @aws-sdk/middleware-sdk-s3 failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:10.967Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-user-agent",
+      "versionRange": "3.972.38",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-user-agent was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/middleware-user-agent failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-05-01T19:08:10.300Z",
+        "daysSinceMaintained": 6,
+        "normalized": 0.1,
+        "warning": null
+      },
+      "actualRisk": 0,
+      "riskLevel": "LOW"
+    },
+    {
+      "name": "@aws-sdk/middleware-websocket",
+      "versionRange": "3.972.16",
+      "direct": false,
+      "advisories": [],
+      "warnings": [
+        "NVD query for @aws-sdk/middleware-websocket was rate-limited or failed after retries: Request failed with status code 429",
+        "GitHub advisory lookup for @aws-sdk/middleware-websocket failed after retries: API rate limit exceeded for 49.204.87.250. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.) - https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"
+      ],
+      "cvssBaseScore": 0,
+      "blastRadius": {
+        "importCount": 0,
+        "files": [],
+        "normalized": 0.1
+      },
+      "maintenance": {
+        "lastMaintainedAt": "2026-04-16T19:26:44.082Z",
+        "daysSinceMaintained": 21,
+        "normalized": 0.1,
         "warning": null
       },
       "actualRisk": 0,
